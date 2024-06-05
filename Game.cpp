@@ -18,7 +18,7 @@ void Game::initTextures()
 
 void Game::initPlayer()
 {
-	//
+	player_ = new Player();
 }
 
 ///
@@ -35,6 +35,7 @@ Game::Game()
 Game::~Game()
 {
 	delete this->window_;
+	delete this->player_;
 }
 
 ///
@@ -85,6 +86,7 @@ void Game::updatePollEvents()
 void Game::update()
 {
 	//
+	player_->update();
 }
 
 
@@ -97,7 +99,7 @@ void Game::render()
 
 	// Drawing
 
-
+	player_->render(*this->window_);
 
 	// Displaying
 	this->window_->display();

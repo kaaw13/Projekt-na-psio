@@ -6,7 +6,7 @@
 
 void Player::initVariables()
 {
-	//
+    this->movementSpeed_ = 5.0f;
 }
 
 void Player::initTexture()
@@ -24,7 +24,8 @@ void Player::initSprite()
 	this->sprite_.setTexture(this->texture_);
 
 	//Resize the sprite
-	//this->sprite_.scale(sf::Vector2f(0.2f, 0.2f));
+	
+    this->sprite_.scale(sf::Vector2f(0.2f, 0.2f));
 }
 
 ///
@@ -73,10 +74,29 @@ void Player::setPosition(const float x, const float y)
 
 void Player::update()
 {
-
+    // Move player up
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+    {
+        this->sprite_.move(0.f, -this->movementSpeed_);
+    }
+    // Move player down
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+    {
+        this->sprite_.move(0.f, this->movementSpeed_);
+    }
+    // Move player left
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    {
+        this->sprite_.move(-this->movementSpeed_, 0.f);
+    }
+    // Move player right
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    {
+        this->sprite_.move(this->movementSpeed_, 0.f);
+    }
 }
 
 void Player::render(sf::RenderTarget& target)
 {
-
+	target.draw(this->sprite_);
 }
