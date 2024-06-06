@@ -72,7 +72,9 @@ void Player::setPosition(const float x, const float y)
 /// FUNCTIONS
 ///
 
-void Player::update()
+
+
+void Player::move(const float dirX, const float dirY)
 {
     // Move player up
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
@@ -94,6 +96,10 @@ void Player::update()
     {
         this->sprite_.move(this->movementSpeed_, 0.f);
     }
+}
+void Player::update()
+{
+    this->move(0, 0);
 }
 
 void Player::render(sf::RenderTarget& target)

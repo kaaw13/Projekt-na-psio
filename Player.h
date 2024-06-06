@@ -1,10 +1,11 @@
 #pragma once
 
 #include <iostream>
-
+#include <vector>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#include "Bullet.h"
 
 class Player
 {
@@ -14,6 +15,7 @@ private:
 	sf::Texture texture_;
 
 	float movementSpeed_;
+	std::vector<sf::Sprite> bullets_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
@@ -33,8 +35,8 @@ public:
 	void setPosition(const float x, const float y);
 
 	/// FUNCTIONS
-	//void move(const float dirX, const float dirY);
-
+	void move(const float dirX, const float dirY);
+	
 	void update();
 	void render(sf::RenderTarget& target);
 };
