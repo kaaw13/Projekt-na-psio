@@ -2,9 +2,11 @@
 
 #include <iostream>
 #include <vector>
+
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+
 #include "Bullet.h"
 
 class Player
@@ -12,30 +14,35 @@ class Player
 private:
 	/// VARIABLES
 	sf::Sprite sprite_;
-	sf::Texture texture_;
 
 	float movementSpeed_;
-	std::vector<sf::Sprite> bullets_;
+	unsigned maxHp_;
+	int hp_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
-	void initTexture();
-	void initSprite();
+	void initSprite(sf::Texture* texture);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Player();
+	Player(sf::Texture* texture);
 	virtual ~Player();
 
 	/// GETTERS
-	const sf::Vector2f& getPos() const;
-	const sf::FloatRect getBounds() const;
+	// inline
+	inline const sf::Vector2f& getPos()    const { return this->sprite_.getPosition(); };
+	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
+	inline const unsigned	   getMaxHp()  const { return this->maxHp_; };
+	inline const int		   getHp()	   const { return this->hp_; };
 
-	/// SETTERS.
+	/// SETTERS
 	void setPosition(const float x, const float y);
+	void setCurrentHp(unsigned new_hp);
+	void changeCurrentHp(int amount);
+	void setMaxHp(unsigned new_max_hp);
 
 	/// FUNCTIONS
-	void move(const float dirX, const float dirY);
+	void move();
 	
 	void update();
 	void render(sf::RenderTarget& target);

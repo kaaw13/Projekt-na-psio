@@ -6,19 +6,66 @@
 
 void Game::initWindow()
 {
-	this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "nazwa", sf::Style::Fullscreen);
+	//this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "nazwa", sf::Style::Fullscreen);	// okno docelowe
+	this->window_ = new sf::RenderWindow(sf::VideoMode(800, 600), "nazwa", sf::Style::Close);		// okienko tymczasowe do wygodniejszego testowania
 	this->window_->setFramerateLimit(144);
 	this->window_->setVerticalSyncEnabled(false);
+	std::cout << "initWindow\n";
 }
 
 void Game::initTextures()
 {
-	//
+	/*
+		@returns void
+
+		wczytuje wszystkie textury i dodaje je do wektora textures_
+		- playerSheet
+		- enemySheet
+	*/
+
+	this->textures_["PLAYER_SHEET"] = new sf::Texture;
+	if (!this->textures_["PLAYER_SHEET"]->loadFromFile("Textures/playerSheet.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load playerSheet.png\n";
+	}
+
+	this->textures_["ENEMY_SHEET"] = new sf::Texture;
+	if (!this->textures_["ENEMY_SHEET"]->loadFromFile("Textures/enemySheet.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load enemySheet.png\n";
+	}
+
+	this->textures_["BACKGROUND_1"] = new sf::Texture;
+	if (!this->textures_["BACKGROUND_1"]->loadFromFile("Textures/background1.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load background1.png\n";
+	}
 }
 
 void Game::initPlayer()
 {
-	player_ = new Player();
+	this->player_ = new Player(textures_["PLAYER_SHEET"]);
+}
+
+void Game::initMenu()
+{
+	/*
+		WORK IN PROGRESS
+	 
+		@returns void
+
+		initialises the menu
+		- sets isMenu_ flag to true
+		- creates buttons for levels
+		- creates button for exit
+	*/
+
+	this->isMenu_ = true;
+
+	// testowy przycisk
+	this->button_1 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
+	this->button_1->setPosition(sf::Vector2f(590.f, 200.f));
+	this->button_1->setFillColor(sf::Color::White);
 }
 
 ///
@@ -27,15 +74,25 @@ void Game::initPlayer()
 
 Game::Game()
 {
+	// calls all init-Functions
 	this->initWindow();
 	this->initTextures();
 	this->initPlayer();
+	this->initMenu();
 }
 
 Game::~Game()
 {
-	delete this->window_;
+	// deletes all objects
 	delete this->player_;
+	delete this->button_1;
+
+	for (auto& el : this->textures_)
+	{
+		delete el.second;
+	}
+
+	delete this->window_;
 }
 
 ///
@@ -83,14 +140,47 @@ void Game::updatePollEvents()
 
 // UPDATES
 
-void Game::update()
+void Game::updateMenu()
 {
-	//
-	player_->update();
+	/*
+		@returns void
+
+		funkcja odpowiadaj¹ca za wybór poziomu
+		- sprawdza czy wciœniêto lewy przycisk myszy
+		- sprawdza czy klikniêto na przycisk 
+		- wy³¹cza menu ustawiaj¹c isMenu_ na false
+		- wywo³uje odpowiedni poziom
+	*/
+
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		if (this->button_1->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		{
+			this->isMenu_ = false;
+			std::cout << "button_1 clicked\n";
+
+			// tworzenie poziomu
+			this->level_ = new Level(this->player_, this->window_, this->textures_["BACKGROUND_1"], this->textures_["ENEMY_SHEET"]);
+		}
+	}
 }
 
+void Game::update()
+{
+	this->mousePos_ = sf::Mouse::getPosition(*this->window_);
+
+	if (this->isMenu_)
+		this->updateMenu();
+	else
+		this->level_->update();
+}
 
 // RENDERS
+
+void Game::renderMenu()
+{
+	this->window_->draw(*this->button_1);
+}
 
 void Game::render()
 {
@@ -98,8 +188,10 @@ void Game::render()
 	this->window_->clear();
 
 	// Drawing
-
-	player_->render(*this->window_);
+	if (this->isMenu_)
+		this->renderMenu();
+	else
+		this->level_->render();
 
 	// Displaying
 	this->window_->display();
