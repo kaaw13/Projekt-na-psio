@@ -11,26 +11,29 @@ private:
 	// base
 	sf::RenderWindow* window_;
 
-	sf::Clock spawnClock_;
-	int spawnCooldown_;
-
 	// textures
-	sf::Texture* enemyTexture_;
+	std::map<std::string, sf::Texture*>* textures_ptr;
 	sf::Sprite* background_;
 
-	// game objects
+	// player
 	Player* player_;
+	std::vector<Bullet*> bullets_;
+
+	// enemies.
 	std::vector<Enemy*> enemies_;
+	sf::Clock* spawnClock_;
+	sf::Time spawnCooldown_;
 
 	/// INIT FUNCTIONS
+	void initTextures(std::map<std::string, sf::Texture*>* textures);
 	void initPlayer();
-	void initBackground(sf::Texture* background_texture);
+	void initBackground();
 	void initEnemies();
 	void initClock();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Level(Player* player, sf::RenderWindow* window, sf::Texture* background_texture, sf::Texture* enemy_texture);
+	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures);
 	virtual ~Level();
 
 	/// GETTERS
@@ -42,10 +45,16 @@ public:
 	/// FUNCTIONS
 	sf::Vector2f randSpawnPosition();
 	void enemySpawning();
+	void updateEnemies();
+
+	void shoting();
+	void updateBullets();
+	void cullBullets();
 
 	void update();
 
 	void renderEnemies();
+	void renderBullets();
 	void render();
 };
 

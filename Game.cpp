@@ -40,6 +40,12 @@ void Game::initTextures()
 	{
 		std::cout << "GAME::INITTEXTURES::Failed to load background1.png\n";
 	}
+
+	this->textures_["BULLET"] = new sf::Texture;
+	if (!this->textures_["BULLET"]->loadFromFile("Textures/bullet.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load bullet.png\n";
+	}
 }
 
 void Game::initPlayer()
@@ -160,7 +166,7 @@ void Game::updateMenu()
 			std::cout << "button_1 clicked\n";
 
 			// tworzenie poziomu
-			this->level_ = new Level(this->player_, this->window_, this->textures_["BACKGROUND_1"], this->textures_["ENEMY_SHEET"]);
+			this->level_ = new Level(this->player_, this->window_, &this->textures_);
 		}
 	}
 }

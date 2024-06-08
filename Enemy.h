@@ -27,12 +27,16 @@ public:
 	virtual ~Enemy();
 
 	/// GETTERS
-
+	// inline
+	inline const sf::Vector2f& getPos()    const { return this->sprite_.getPosition(); };
+	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
 
 	/// SETTERS
 
 
 	/// FUNCTIONS
-	void update();
+	void move(float px, float py);
+	void update(sf::Vector2f playerPos);
+
 	void render(sf::RenderTarget& target);
 };
