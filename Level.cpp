@@ -1,8 +1,52 @@
 #include "Level.h"
+#include <fstream>
+#include <vector>
 
 ///
 /// INIT FUNCTIONS
 ///
+void Level::initFromFiles(std::string path)
+{
+	/*
+		@returns void
+
+		funkcja wczytuj¹ca dane z pliku
+		- otwarcie pliku
+		- sprawdzenie czy plik jest otwarty
+		- wczytanie danych
+		- zamkniêcie pliku
+	*/
+
+	std::ifstream file(path);
+
+	if (file.is_open())
+	{
+		
+		std::string line;
+		std::vector<std::string> test;
+
+		while (std::getline(file, line))
+		{
+			test.push_back(line);
+		}
+
+		for (auto& el : test)
+		{
+			std::cout << el << std::endl;
+		}
+		background_Texture_Key = test[0];
+		enemy_Texture_key = test[1];
+		enemyspeed = std::stof(test[2]);
+		enemyMaxHp = std::stoi(test[3]);
+		enemyDamage = std::stoi(test[4]);
+	}
+	else
+	{
+		std::cout << "ERROR: Level::initFromFiles() - could not open file\n";
+	}
+
+	file.close();
+}
 
 void Level::initTextures(std::map<std::string, sf::Texture*>* textures)
 {
@@ -24,12 +68,13 @@ void Level::initBackground()
 	*/
 
 	this->background_ = new sf::Sprite;
-	this->background_->setTexture(*(*textures_ptr)["BACKGROUND_1"]);
+	this->background_->setTexture(*(*textures_ptr)[background_Texture_Key]);
 }
 
 void Level::initEnemies()
 {
 	//
+
 }
 
 void Level::initClock()
@@ -42,7 +87,7 @@ void Level::initClock()
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures)
+Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures,std::string path)
 	: player_(player), window_(window), textures_ptr(textures)
 {
 	/*
@@ -56,11 +101,12 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 	*/
 
 	std::cout << "new level\n";
-
+	this->initFromFiles(path);
 	this->initPlayer();
 	this->initBackground();
 	this->initEnemies();
 	this->initClock();
+	
 }
 
 Level::~Level()
@@ -183,7 +229,7 @@ void Level::enemySpawning()
 
 	if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds()) 
 	{
-		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)["ENEMY_SHEET"]));
+		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_Texture_key],enemyspeed,enemyMaxHp,enemyDamage));
 		this->spawnClock_->restart();
 	}
 }

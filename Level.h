@@ -7,6 +7,11 @@ class Level
 {
 private:
 	/// VARIABLES
+	std::string background_Texture_Key;
+	std::string enemy_Texture_key;
+	float enemyspeed;
+	unsigned enemyMaxHp;
+	unsigned enemyDamage;
 
 	// base
 	sf::RenderWindow* window_;
@@ -25,6 +30,7 @@ private:
 	sf::Time spawnCooldown_;
 
 	/// INIT FUNCTIONS
+	void initFromFiles(std::string path);
 	void initTextures(std::map<std::string, sf::Texture*>* textures);
 	void initPlayer();
 	void initBackground();
@@ -33,7 +39,7 @@ private:
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures);
+	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures,std::string path);
 	virtual ~Level();
 
 	/// GETTERS

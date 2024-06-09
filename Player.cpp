@@ -141,7 +141,6 @@ void Player::move()
         this->sprite_.move(this->movementSpeed_, 0.f);
     }
 }
-
 void Player::update()
 {
     this->timeSinceLastShot_ += this->shotClock_.restart();

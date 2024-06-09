@@ -70,8 +70,14 @@ void Game::initMenu()
 
 	// testowy przycisk
 	this->button_1 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
-	this->button_1->setPosition(sf::Vector2f(590.f, 200.f));
+	this->button_1->setPosition(sf::Vector2f(100.f, 200.f));
 	this->button_1->setFillColor(sf::Color::White);
+	this->button_2 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
+	this->button_2->setPosition(sf::Vector2f(300.f, 200.f));
+	this->button_2->setFillColor(sf::Color::White);
+	this->button_3 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
+	this->button_3->setPosition(sf::Vector2f(500.f, 200.f));
+	this->button_3->setFillColor(sf::Color::White);
 }
 
 ///
@@ -92,6 +98,8 @@ Game::~Game()
 	// deletes all objects
 	delete this->player_;
 	delete this->button_1;
+	delete this->button_2;
+	delete this->button_3;
 
 	for (auto& el : this->textures_)
 	{
@@ -166,7 +174,23 @@ void Game::updateMenu()
 			std::cout << "button_1 clicked\n";
 
 			// tworzenie poziomu
-			this->level_ = new Level(this->player_, this->window_, &this->textures_);
+			this->level_ = new Level(this->player_, this->window_, &this->textures_,"Level/Level1.txt");
+		}
+		else if (this->button_2->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		{
+			this->isMenu_ = false;
+			std::cout << "button_2 clicked\n";
+
+			// tworzenie poziomu
+			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level2.txt");
+		}
+		else if (this->button_3->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		{
+			this->isMenu_ = false;
+			std::cout << "button_3 clicked\n";
+
+			// tworzenie poziomu
+			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level3.txt");
 		}
 	}
 }
@@ -186,6 +210,8 @@ void Game::update()
 void Game::renderMenu()
 {
 	this->window_->draw(*this->button_1);
+	this->window_->draw(*this->button_2);
+	this->window_->draw(*this->button_3);
 }
 
 void Game::render()

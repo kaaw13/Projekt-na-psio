@@ -25,6 +25,7 @@ private:
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
 	Enemy(sf::Vector2f position, sf::Texture* texture);
+	Enemy(sf::Vector2f position, sf::Texture* texture, float enemyspeed, unsigned enemyMaxHp, unsigned enemyDamage);
 	virtual ~Enemy();
 
 	/// GETTERS

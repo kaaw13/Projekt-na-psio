@@ -18,6 +18,8 @@ private:
 
 	// menu
 	sf::RectangleShape* button_1;
+	sf::RectangleShape* button_2;
+	sf::RectangleShape* button_3;
 	bool isMenu_;
 
 	// resources
