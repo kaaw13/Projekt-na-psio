@@ -13,6 +13,7 @@ private:
 	/// VARIABLES
 	sf::Sprite sprite_;
 
+	unsigned damage_;
 	float movementSpeed_;
 	sf::Vector2f displacement_;	// wektor podawany jako argument do this->sprite_.move(displacement); zawiera [Vx, Vy];
 
@@ -22,13 +23,14 @@ private:
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Bullet(sf::Vector2f player_pos, sf::Vector2f mouse_pos, sf::Texture* texture);
+	Bullet(sf::Vector2f player_pos, sf::Vector2f mouse_pos, sf::Texture* texture, unsigned damage);
 	virtual ~Bullet();
 
 	/// GETTERS
 	// inline
 	inline const sf::Vector2f& getPos()    const { return this->sprite_.getPosition(); };
 	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
+	inline const unsigned	   getDamage() const { return this->damage_; };
 
 	/// SETTERS
 

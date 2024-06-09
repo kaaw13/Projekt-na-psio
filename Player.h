@@ -18,6 +18,7 @@ private:
 	float movementSpeed_;
 	unsigned maxHp_;
 	int hp_;
+	unsigned damage_;
 
 	sf::Clock shotClock_;
 	sf::Time shotCooldown_;
@@ -42,18 +43,21 @@ public:
 	inline const sf::FloatRect getBounds()    const { return this->sprite_.getGlobalBounds(); };
 	inline const unsigned	   getMaxHp()     const { return this->maxHp_; };
 	inline const int		   getHp()		  const { return this->hp_; };
+	inline const unsigned	   getDamage()	  const { return this->damage_; };
 
 	/// SETTERS
 	void setPosition(const float x, const float y);
 	void setCurrentHp(unsigned new_hp);
-	void changeCurrentHp(int amount);
+	void damage(unsigned damage);
+	void heal(unsigned heal);
 	void setMaxHp(unsigned new_max_hp);
 	void resetTimeSinceLastShot();
+	void changeDamage(int amount);
 
 	/// FUNCTIONS.
 	void move();
-	
 	void update();
+
 	void render(sf::RenderTarget& target);
 };
 

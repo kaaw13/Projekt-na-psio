@@ -43,13 +43,18 @@ public:
 
 
 	/// FUNCTIONS
+	void shoting();
+	void playerWindowCollision();
+
 	sf::Vector2f randSpawnPosition();
 	void enemySpawning();
 	void updateEnemies();
+	void deleteEnemy(unsigned& counter);
 
-	void shoting();
+	bool bulletCollision(Bullet* bullet, unsigned& counter);
+	bool cullBullet(Bullet* bullet, unsigned& counter);
+	void deleteBullet(unsigned& counter);
 	void updateBullets();
-	void cullBullets();
 
 	void update();
 

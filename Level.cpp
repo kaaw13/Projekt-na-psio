@@ -87,6 +87,42 @@ Level::~Level()
 /// FUNCTIONS
 ///
 
+//			PLAYER RELATED			//
+
+void Level::playerWindowCollision()
+{
+	/*
+		@returns void
+
+		funkcja odpowiedzialna za utrzymanie gracza w oknie - cofa go je¿eli ten próbuje siê z niego wydostaæ
+	*/
+
+	sf::Vector2u window_size = this->window_->getSize();
+
+	// left
+	if (this->player_->getBounds().left < 0.f)
+	{
+		this->player_->setPosition(0.f, this->player_->getBounds().top);
+	}
+	// right
+	else if (this->player_->getBounds().left + this->player_->getBounds().width > window_size.x)
+	{
+		this->player_->setPosition(window_size.x - this->player_->getBounds().width, this->player_->getBounds().top);
+	}
+	// top
+	if (this->player_->getBounds().top < 0.f)
+	{
+		this->player_->setPosition(this->player_->getBounds().left, 0.f);
+	}
+	// bottom
+	else if (this->player_->getBounds().top + this->player_->getBounds().height > window_size.y)
+	{
+		this->player_->setPosition(this->player_->getBounds().left, window_size.y - this->player_->getBounds().height);
+	}
+}
+
+//			ENEMY RELATED			//
+
 sf::Vector2f Level::randSpawnPosition()
 {
 	/*
@@ -152,6 +188,14 @@ void Level::enemySpawning()
 	}
 }
 
+void Level::deleteEnemy(unsigned& counter)
+{
+	delete this->enemies_.at(counter);
+	this->enemies_.erase(this->enemies_.begin() + counter);
+	--counter;
+	std::cout << "enemy deleted\n";
+}
+
 void Level::updateEnemies()
 {
 	/*
@@ -162,21 +206,33 @@ void Level::updateEnemies()
 		- calls Level::enemySpawning() that handles spawning
 	*/
 
-	for (auto el : enemies_)
+	unsigned counter = 0;
+	for (auto& enemy : enemies_)
 	{
-		//Enemy::update() bêdzie odpowiedzialne za wykonanie ruchu oraz kolizji z graczem
-		el->update(this->player_->getPos());
+		enemy->update(this->player_->getPos());
+
+		if (enemy->getHp() <= 0)
+			this->deleteEnemy(counter);
+
+		++counter;
 	}
 
 	this->enemySpawning();
 }
+
+//			 BULLET RELATED				//
 
 void Level::shoting()
 {
 	/*
 		@return void
 
-		creating bullets
+		funkcja odpowiedzialna za strzelanie
+		- je¿eli wciœniêty jest lewy przycisk myszy
+		- i je¿eli min¹³ minimalny czas od ostatniego oddanego strza³u
+		- tworzony jest sf::Vector2f z pozycj¹ myszy w stosunku do okna, aby wykrozystaæ go w konstruktorze obiektu BULLET
+		- stworzenie nowego obiektu BULLET i dodanie go do Level::bullets_
+		- zresetowanie czasu od ostaniego strza³u Player::resetTimeSinceLastShot()
 	*/
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -185,40 +241,127 @@ void Level::shoting()
 		{
 			sf::Vector2f mouse_pos = { static_cast<float>(sf::Mouse::getPosition(*this->window_).x), static_cast<float>(sf::Mouse::getPosition(*this->window_).y) };
 
-			this->bullets_.push_back(new Bullet(this->player_->getPos(), mouse_pos, (*textures_ptr)["BULLET"]));
+			this->bullets_.push_back(new Bullet(this->player_->getPos(), mouse_pos, (*textures_ptr)["BULLET"], this->player_->getDamage()));
 			
 			this->player_->resetTimeSinceLastShot();
 		}
 	}
 }
 
+bool Level::bulletCollision(Bullet* bullet, unsigned& counter)
+{
+	/*
+		@returns bool - czy kula zosta³a usuniêta?
+
+		wykonywana w pêtli funkcji Level::updateBullets() dla ka¿dej kuli w Level::bullets_,
+		sprawdza czy dosz³o do kolizji z którymœ z przeciwników, jeœli tak to wykonuje kolizje
+		- iteracja po ka¿dym elemencie Level::enemies_
+		- sprawdzenie czy dosz³o do kolizji
+		- jeœli tak:
+			> zadanie obra¿eñ rpzeciwnikowi
+			> usuniêcie kuli funkcj¹ Level::deleteBullet(counter)
+			> zwrócenie wartoœci true (kula zosta³a usuniêta)
+		- jeœli nie:
+			> zwrócenie wartoœci false (kula nie zosta³a usuniêta)
+	*/
+
+	for (auto& enemy : enemies_)
+	{
+		if (bullet->getBounds().intersects(enemy->getBounds()))
+		{
+			enemy->damage(bullet->getDamage());
+			this->deleteBullet(counter);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Level::cullBullet(Bullet* bullet, unsigned& counter)
+{
+	/*
+		@returns bool - czy kula zosta³a usuniêta?
+
+		wykonywana w pêtli funkcji Level::updateBullets() dla ka¿dej kuli w Level::bullets_,
+		je¿eli kula nie zosta³a jeszcze usuniêta w funkcji Level::bulletCollision(...),
+		sprawdza czy kula opuœci³a okno programu
+		- zmienna pomocnicza bounds
+		- sprawdzenie czy kula opuœci³a okno programu
+		- jeœli tak:
+			> usuniêcie kuli funkcj¹ Level::deleteBullet(counter)
+			> zwrócenie wartoœci true (kula zosta³a usuniêta)
+		- jeœli nie:
+			> zwrócenie wartoœci false (kula nie zosta³a usuniêta)
+	*/
+
+	sf::FloatRect bounds = bullet->getBounds();
+	if (bounds.left + bounds.width < 0 || bounds.left > this->window_->getSize().x ||
+		bounds.top + bounds.height < 0 || bounds.top  > this->window_->getSize().y)
+	{
+		this->deleteBullet(counter);
+		return true;
+	}
+	return false;
+}
+
+void Level::deleteBullet(unsigned& counter)
+{
+	/*
+		@return void
+
+		- usuwa obiekt pod wskaŸniekiem
+		- usuwa wskaŸnik
+		- aktualizuje counter
+	*/
+
+	delete this->bullets_.at(counter);
+	this->bullets_.erase(this->bullets_.begin() + counter);
+	--counter;
+	std::cout << "bullet deleted\n";
+}
+
 void Level::updateBullets()
 {
-	for (auto el : bullets_)
+	/*
+		@returns void
+
+		funkcja odpowiada za aktualizowanie oraz usuwanie kul
+		- counter - zmienna pomocnicza s³u¿¹ca do prawid³owego usuwania kul
+		- pêtla iteruj¹ca po wszystkich elementach Level::bullets_
+		- przemieszczenie kuli przez Bullet::update() 
+		- sprawdzenie kolizji z przeciwnikiem przez Level::bulletCollision(...)
+		- je¿eli do kolizji nie dosz³o - sprawdzenie czy kula opuœci³a ekran przez Level::cullBullet(...)
+	*/
+
+	unsigned counter = 0;
+	for (auto& bullet : bullets_)
 	{
-		el->update();
+		bullet->update();
+
+		if (!this->bulletCollision(bullet, counter))
+			this->cullBullet(bullet, counter);	
+
+		++counter;
 	}
 }
 
-void Level::cullBullets()
-{
-	// to bêdzie funkcja odpowiedzialna za usuwanie pocisków, które znajduj¹ siê poza ekranem
-}
+//			MAIN UPDATE			//
 
 void Level::update()
 {
 	this->player_->update();
-	this->updateBullets();
 	this->shoting();
-	//this->updateEnemies();
-	this->cullBullets();
+	this->playerWindowCollision();
+
+	this->updateBullets();
+	this->updateEnemies();
 }
 
-// rendering
+//			RENDERING			//
 
 void Level::renderEnemies()
 {
-	for (auto el : enemies_)
+	for (auto& el : enemies_)
 	{
 		el->render(*this->window_);
 	}
@@ -226,7 +369,7 @@ void Level::renderEnemies()
 
 void Level::renderBullets()
 {
-	for (auto el : bullets_)
+	for (auto& el : bullets_)
 	{
 		el->render(*this->window_);
 	}
@@ -235,8 +378,8 @@ void Level::renderBullets()
 void Level::render()
 {
 	this->window_->draw(*this->background_);
-	this->player_->render(*this->window_);
 
-	this->renderEnemies();
 	this->renderBullets();
+	this->player_->render(*this->window_);
+	this->renderEnemies();
 }

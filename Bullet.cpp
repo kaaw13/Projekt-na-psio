@@ -22,28 +22,26 @@ void Bullet::initVariables(sf::Vector2f player_pos, sf::Vector2f mouse_pos)
 		6) zainicjalizowanie wektora displacement
 	*/
 
-	this->movementSpeed_ = 1.f;
+	this->movementSpeed_ = 5.f;
 	float Vx, Vy;
 
-	float px = player_pos.x;
-	float py = player_pos.y;
+	// 1) przesuniêcie
+	float rx = mouse_pos.x - player_pos.x;
+	float ry = mouse_pos.y - player_pos.y;
 
-	float mx = mouse_pos.x;
-	float my = mouse_pos.y;
+	// 2) stosunek Vx do Vy
+	float ratio = rx / ry;
 
-	float rx = mx - px;
-	float ry = my - py;
+	// 3) obliczenie Vy
+	Vy = this->movementSpeed_ / sqrt(pow(ratio, 2) + 1);
 
-	float s = rx / ry;
-
-	Vy = this->movementSpeed_ / sqrt(pow(s, 2) + 1);
-
+	// 4) zwrot Vy
 	if (ry < 0) Vy = -Vy;
 
-	Vx = s * Vy;
+	// 5) obliczenie Vx
+	Vx = ratio * Vy;
 
-	std::cout << "Player: " << px << ":" << py << " Mouse: " << mx << ":" << my << " r: " << rx << ":" << ry << " s: " << s << " disp: " << Vx << ":" << Vy << std::endl;
-
+	// 6) zainicjowanie displacement_
 	this->displacement_ = sf::Vector2f(Vx, Vy);
 }
 
@@ -58,7 +56,8 @@ void Bullet::initSprite(sf::Vector2f position, sf::Texture* texture)
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Bullet::Bullet(sf::Vector2f player_pos, sf::Vector2f mouse_pos, sf::Texture* texture)
+Bullet::Bullet(sf::Vector2f player_pos, sf::Vector2f mouse_pos, sf::Texture* texture, unsigned damage)
+	: damage_(damage)
 {
 	this->initVariables(player_pos, mouse_pos);
 	this->initSprite(player_pos, texture);

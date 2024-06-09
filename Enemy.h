@@ -16,6 +16,7 @@ private:
 	float movementSpeed_;
 	unsigned maxHp_;
 	int hp_;
+	unsigned damage_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
@@ -30,9 +31,11 @@ public:
 	// inline
 	inline const sf::Vector2f& getPos()    const { return this->sprite_.getPosition(); };
 	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
+	inline const unsigned	   getDamage() const { return this->damage_; };
+	inline const int		   getHp()	   const { return this->hp_; };
 
 	/// SETTERS
-
+	void damage(unsigned damage);
 
 	/// FUNCTIONS
 	void move(float px, float py);

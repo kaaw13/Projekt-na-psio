@@ -6,9 +6,10 @@
 
 void Enemy::initVariables()
 {
-	this->movementSpeed_ = 1.f;
+	this->movementSpeed_ = 0.5f;
 	this->maxHp_ = 10;
 	this->hp_ = maxHp_;
+	this->damage_ = 4;
 }
 
 void Enemy::initSprite(sf::Vector2f position, sf::Texture* texture)
@@ -40,6 +41,14 @@ Enemy::~Enemy()
 ///
 /// SETTERS
 ///
+
+void Enemy::damage(unsigned damage)
+{
+	this->hp_ -= damage;
+
+	if (this->hp_ < 0)
+		this->hp_ = 0;
+}
 
 ///
 /// FUNCTIONS
