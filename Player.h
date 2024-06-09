@@ -20,8 +20,8 @@ private:
 	int hp_;
 
 	sf::Clock shotClock_;
-	float shotCooldown_;
-	bool canShot_;
+	sf::Time shotCooldown_;
+	sf::Time timeSinceLastShot_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
@@ -34,26 +34,24 @@ public:
 	virtual ~Player();
 
 	/// GETTERS
-	const float getShotCd() const;
-	const float getShotClockElapsed() const;
+	const float getTimeSinceLastShoot() const;
+	const float getShootCooldown() const;
 
 	// inline
 	inline const sf::Vector2f& getPos()       const { return this->sprite_.getPosition(); };
 	inline const sf::FloatRect getBounds()    const { return this->sprite_.getGlobalBounds(); };
 	inline const unsigned	   getMaxHp()     const { return this->maxHp_; };
 	inline const int		   getHp()		  const { return this->hp_; };
-	inline const bool		   getCanShot()   const { return this->canShot_; };
 
 	/// SETTERS
 	void setPosition(const float x, const float y);
 	void setCurrentHp(unsigned new_hp);
 	void changeCurrentHp(int amount);
 	void setMaxHp(unsigned new_max_hp);
-	void resetShotClock();
+	void resetTimeSinceLastShot();
 
-	/// FUNCTIONS
+	/// FUNCTIONS.
 	void move();
-	void updateCanShoot();
 	
 	void update();
 	void render(sf::RenderTarget& target);

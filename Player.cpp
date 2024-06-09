@@ -9,7 +9,8 @@ void Player::initVariables()
     this->movementSpeed_ = 4.0f;
     this->maxHp_ = 10;
     this->hp_ = maxHp_;
-    this->canShot_ = true;
+    this->shotCooldown_ = sf::seconds(1.f);
+    this->timeSinceLastShot_ = sf::Time::Zero;
 }
 
 void Player::initSprite(sf::Texture* texture)
@@ -23,7 +24,6 @@ void Player::initSprite(sf::Texture* texture)
 
 void Player::initClock()
 {
-    this->shotCooldown_ = 2.f;
     //this->shotClock_ = new sf::Clock;
     this->shotClock_.restart();
 }
@@ -56,14 +56,14 @@ Player::~Player()
 /// GETTERS
 ///
 
-const float Player::getShotCd() const
+const float Player::getTimeSinceLastShoot() const
 {
-    return this->shotCooldown_;
+    return timeSinceLastShot_.asSeconds();
 }
 
-const float Player::getShotClockElapsed() const
+const float Player::getShootCooldown() const
 {
-    return this->shotClock_.getElapsedTime().asSeconds();
+    return shotCooldown_.asSeconds();
 }
 
 ///
@@ -105,11 +105,9 @@ void Player::setMaxHp(unsigned new_max_hp)
     this->maxHp_ = new_max_hp;
 }
 
-void Player::resetShotClock()
+void Player::resetTimeSinceLastShot()
 {
-    this->shotClock_.restart();
-    this->canShot_ = false;
-    std::cout << "shotClock restart\n";
+    this->timeSinceLastShot_ = sf::Time::Zero;
 }
 
 ///
@@ -140,16 +138,11 @@ void Player::move()
     }
 }
 
-void Player::updateCanShoot()
-{
-    if (this->getShotClockElapsed() >= this->getShotCd())
-        this->canShot_ = true;
-}
 
 void Player::update()
 {
+    this->timeSinceLastShot_ += this->shotClock_.restart();
     this->move();
-    this->updateCanShoot();
 }
 
 void Player::render(sf::RenderTarget& target)

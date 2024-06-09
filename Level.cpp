@@ -181,14 +181,13 @@ void Level::shoting()
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
-		if (this->player_->getCanShot())
+		if (this->player_->getTimeSinceLastShoot() >= this->player_->getShootCooldown())
 		{
-			std::cout << "shot\n";
-
-			sf::Vector2f mouse_pos = { static_cast<float>(sf::Mouse::getPosition().x), static_cast<float>(sf::Mouse::getPosition().y) };
+			sf::Vector2f mouse_pos = { static_cast<float>(sf::Mouse::getPosition(*this->window_).x), static_cast<float>(sf::Mouse::getPosition(*this->window_).y) };
 
 			this->bullets_.push_back(new Bullet(this->player_->getPos(), mouse_pos, (*textures_ptr)["BULLET"]));
-			this->player_->resetShotClock();
+			
+			this->player_->resetTimeSinceLastShot();
 		}
 	}
 }
@@ -211,7 +210,7 @@ void Level::update()
 	this->player_->update();
 	this->updateBullets();
 	this->shoting();
-	this->updateEnemies();
+	//this->updateEnemies();
 	this->cullBullets();
 }
 

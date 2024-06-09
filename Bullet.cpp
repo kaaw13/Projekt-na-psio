@@ -22,27 +22,28 @@ void Bullet::initVariables(sf::Vector2f player_pos, sf::Vector2f mouse_pos)
 		6) zainicjalizowanie wektora displacement
 	*/
 
-	this->movementSpeed_ = 5.f;
+	this->movementSpeed_ = 1.f;
 	float Vx, Vy;
 
-	// 1) wektor przesuniêcia
-	float rx = mouse_pos.x - player_pos.x;
-	float ry = mouse_pos.y - player_pos.y;
+	float px = player_pos.x;
+	float py = player_pos.y;
 
-	// 2) stosunek Vx/Vy
-	float ratio = rx / ry;
+	float mx = mouse_pos.x;
+	float my = mouse_pos.y;
 
-	// 3) obliczenie Vy
-	Vy = this->movementSpeed_ / sqrt(pow(ratio, 2) + 1);
+	float rx = mx - px;
+	float ry = my - py;
 
-	// 4) zwrot Vy
-	if (ry < 0)
-		Vy = -Vy;
+	float s = rx / ry;
 
-	// 5) obliczenie Vx
-	Vx = ratio * Vy;
+	Vy = this->movementSpeed_ / sqrt(pow(s, 2) + 1);
 
-	// 6) ruch
+	if (ry < 0) Vy = -Vy;
+
+	Vx = s * Vy;
+
+	std::cout << "Player: " << px << ":" << py << " Mouse: " << mx << ":" << my << " r: " << rx << ":" << ry << " s: " << s << " disp: " << Vx << ":" << Vy << std::endl;
+
 	this->displacement_ = sf::Vector2f(Vx, Vy);
 }
 
