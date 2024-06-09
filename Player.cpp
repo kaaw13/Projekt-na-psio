@@ -6,9 +6,11 @@
 
 void Player::initVariables()
 {
-    this->movementSpeed_ = 5.0f;
+    this->movementSpeed_ = 4.0f;
     this->maxHp_ = 10;
     this->hp_ = maxHp_;
+    this->shotCooldown_ = sf::seconds(1.f);
+    this->damage_ = 5;
 }
 
 void Player::initSprite(sf::Texture* texture)
@@ -17,7 +19,13 @@ void Player::initSprite(sf::Texture* texture)
 	this->sprite_.setTexture(*texture);
 
 	// Resize the sprite
-    this->sprite_.scale(sf::Vector2f(0.2f, 0.2f));
+    this->sprite_.scale(sf::Vector2f(0.4f, 0.4f));
+}
+
+void Player::initClock()
+{
+    this->timeSinceLastShot_ = sf::Time::Zero;
+    this->shotClock_.restart();
 }
 
 ///
@@ -48,7 +56,15 @@ Player::~Player()
 /// GETTERS
 ///
 
+const float Player::getTimeSinceLastShoot() const
+{
+    return timeSinceLastShot_.asSeconds();
+}
 
+const float Player::getShootCooldown() const
+{
+    return shotCooldown_.asSeconds();
+}
 
 ///
 /// SETTERS
@@ -64,23 +80,19 @@ void Player::setCurrentHp(unsigned new_hp)
     this->hp_ = new_hp;
 }
 
-void Player::changeCurrentHp(int amount)
+void Player::damage(unsigned damage)
 {
-    /*
-        @returns void
+    this->hp_ -= damage;
 
-        funckja odpowiada za zmianê hp o wartoœæ podan¹ w argumencie (amount),
-        dotyczy to zarówno leczenia i obra¿eñ -> wartoœci dodatnich i ujemnych
-        - zmiana hp_
-        - sprawdzenie czy hp_ < 0
-        - sprawdzenie czy hp_ > maxHp_
-    */
-
-    this->hp_ += amount;
-
-    if (this->hp_ < 0)
+    if (this->hp_ < 0) 
         this->hp_ = 0;
-    else if (this->hp_ > this->maxHp_)
+}
+
+void Player::heal(unsigned heal)
+{
+    this->hp_ += heal;
+
+    if (this->hp_ > this->maxHp_)
         this->hp_ = this->maxHp_;
 }
 
@@ -89,11 +101,22 @@ void Player::setMaxHp(unsigned new_max_hp)
     this->maxHp_ = new_max_hp;
 }
 
+void Player::resetTimeSinceLastShot()
+{
+    this->timeSinceLastShot_ = sf::Time::Zero;
+}
+
+void Player::changeDamage(int amount)
+{
+    this->damage_ += amount;
+
+    if (this->damage_ < 1)
+        this->damage_ = 1;
+}
+
 ///
 /// FUNCTIONS
 ///
-
-
 
 void Player::move()
 {
@@ -121,6 +144,7 @@ void Player::move()
 
 void Player::update()
 {
+    this->timeSinceLastShot_ += this->shotClock_.restart();
     this->move();
 }
 
