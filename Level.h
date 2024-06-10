@@ -3,17 +3,24 @@
 #include "Player.h"
 #include "Enemy.h"
 
+#include <fstream>
+#include <vector>
+
 class Level
 {
 private:
 	/// VARIABLES
-	std::string background_Texture_Key;
-	std::string enemy_Texture_key;
-	float enemyspeed;
-	unsigned enemyMaxHp;
-	unsigned enemyDamage;
+	// from file
+	std::string background_texture_key;
+	std::string enemy_texture_key;
+	float enemySpeed_;
+	unsigned enemyMaxHp_;
+	unsigned enemyDamage_;
 
-	// base
+	unsigned numberOfEnemies_;
+	unsigned enemyCounter_;
+
+	// window
 	sf::RenderWindow* window_;
 
 	// textures
@@ -24,26 +31,29 @@ private:
 	Player* player_;
 	std::vector<Bullet*> bullets_;
 
-	// enemies.
+	// enemies
 	std::vector<Enemy*> enemies_;
 	sf::Clock* spawnClock_;
 	sf::Time spawnCooldown_;
 
 	/// INIT FUNCTIONS
+	void initVariables();
 	void initFromFiles(std::string path);
 	void initTextures(std::map<std::string, sf::Texture*>* textures);
 	void initPlayer();
 	void initBackground();
-	void initEnemies();
 	void initClock();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures,std::string path);
+	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path);
 	virtual ~Level();
 
 	/// GETTERS
+	const bool allEnemiesKilled() const;
 
+	// inline
+	inline const unsigned getPlayerHp() const { return this->player_->getHp(); };
 
 	/// SETTERS
 
@@ -54,6 +64,7 @@ public:
 
 	sf::Vector2f randSpawnPosition();
 	void enemySpawning();
+	void enemyCollision(Enemy* enemy, Player* player);
 	void updateEnemies();
 	void deleteEnemy(unsigned& counter);
 

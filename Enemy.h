@@ -19,13 +19,11 @@ private:
 	unsigned damage_;
 
 	/// INIT FUNCTIONS
-	void initVariables();
 	void initSprite(sf::Vector2f position, sf::Texture* texture);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Enemy(sf::Vector2f position, sf::Texture* texture);
-	Enemy(sf::Vector2f position, sf::Texture* texture, float enemyspeed, unsigned enemyMaxHp, unsigned enemyDamage);
+	Enemy(sf::Vector2f position, sf::Texture* texture, float speed, unsigned maxHp, unsigned damage);
 	virtual ~Enemy();
 
 	/// GETTERS

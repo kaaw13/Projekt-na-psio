@@ -19,15 +19,20 @@ private:
 	unsigned maxHp_;
 	int hp_;
 	unsigned damage_;
+	bool immunity_;
 
 	sf::Clock shotClock_;
 	sf::Time shotCooldown_;
 	sf::Time timeSinceLastShot_;
 
+	sf::Clock immunityClock_;
+	sf::Time immunityCooldown_;
+	sf::Time timeSinceDamaged_;
+
 	/// INIT FUNCTIONS
 	void initVariables();
 	void initSprite(sf::Texture* texture);
-	void initClock();
+	void initClocks();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
@@ -56,6 +61,7 @@ public:
 
 	/// FUNCTIONS.
 	void move();
+	void updateImmunity();
 	void update();
 
 	void render(sf::RenderTarget& target);

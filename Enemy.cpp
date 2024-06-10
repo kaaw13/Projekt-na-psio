@@ -4,11 +4,6 @@
 /// INIT FUNCTIONS
 ///
 
-void Enemy::initVariables()
-{
-	
-}
-
 void Enemy::initSprite(sf::Vector2f position, sf::Texture* texture)
 {
 	this->sprite_.setTexture(*texture);
@@ -20,16 +15,12 @@ void Enemy::initSprite(sf::Vector2f position, sf::Texture* texture)
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture)
-{
-	this->initVariables();
-	this->initSprite(position, texture);
-}
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, float enemyspeed, unsigned enemyMaxHp, unsigned enemyDamage)
-	: movementSpeed_(enemyspeed), maxHp_(enemyMaxHp), hp_(enemyMaxHp), damage_(enemyDamage)
+Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, float speed, unsigned maxHp, unsigned damage)
+	: movementSpeed_(speed), maxHp_(maxHp), hp_(maxHp), damage_(damage)
 {
 	this->initSprite(position, texture);
 }
+
 Enemy::~Enemy()
 {
 

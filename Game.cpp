@@ -13,6 +13,11 @@ void Game::initWindow()
 	std::cout << "initWindow\n";
 }
 
+void Game::initPlayer()
+{
+	this->player_ = new Player(textures_["PLAYER_SHEET"]);
+}
+
 void Game::initTextures()
 {
 	/*
@@ -48,36 +53,48 @@ void Game::initTextures()
 	}
 }
 
-void Game::initPlayer()
+void Game::initText()
 {
-	this->player_ = new Player(textures_["PLAYER_SHEET"]);
+	this->fonts_.push_back(new sf::Font);	
+	if (this->fonts_[0]->loadFromFile("Fonts/ARCADECLASSIC.ttf"))
+	{
+		std::cout << "GAME::INITFONTS::Failed to load ARCADECLASSIC.ttf\n";
+	}
+
+	this->menuTexts_.push_back(new sf::Text("Balls of death", *this->fonts_[0], 44));
+	this->menuTexts_[0]->setFillColor(sf::Color::White);
+	this->menuTexts_[0]->setPosition(sf::Vector2f(50.f, 10.f));
+}
+
+void Game::initButtons()
+{
+	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
+	this->buttons_[0]->setPosition(sf::Vector2f(100.f, 200.f));
+	this->buttons_[0]->setFillColor(sf::Color::White);
+
+	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
+	this->buttons_[1]->setPosition(sf::Vector2f(300.f, 200.f));
+	this->buttons_[1]->setFillColor(sf::Color::White);
+
+	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
+	this->buttons_[2]->setPosition(sf::Vector2f(500.f, 200.f));
+	this->buttons_[2]->setFillColor(sf::Color::White);
 }
 
 void Game::initMenu()
 {
 	/*
-		WORK IN PROGRESS
-	 
 		@returns void
 
 		initialises the menu
 		- sets isMenu_ flag to true
-		- creates buttons for levels
-		- creates button for exit
+		- creates menu text
+		- creates buttons
 	*/
 
 	this->isMenu_ = true;
-
-	// testowy przycisk
-	this->button_1 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
-	this->button_1->setPosition(sf::Vector2f(100.f, 200.f));
-	this->button_1->setFillColor(sf::Color::White);
-	this->button_2 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
-	this->button_2->setPosition(sf::Vector2f(300.f, 200.f));
-	this->button_2->setFillColor(sf::Color::White);
-	this->button_3 = new sf::RectangleShape(sf::Vector2f(100.f, 100.f));
-	this->button_3->setPosition(sf::Vector2f(500.f, 200.f));
-	this->button_3->setFillColor(sf::Color::White);
+	this->initText();
+	this->initButtons();
 }
 
 ///
@@ -97,13 +114,22 @@ Game::~Game()
 {
 	// deletes all objects
 	delete this->player_;
-	delete this->button_1;
-	delete this->button_2;
-	delete this->button_3;
 
 	for (auto& el : this->textures_)
 	{
 		delete el.second;
+	}
+	for (auto& el : this->buttons_)
+	{
+		delete el;
+	}
+	for (auto& el : this->fonts_)
+	{
+		delete el;
+	}
+	for (auto& el : this->menuTexts_)
+	{
+		delete el;
 	}
 
 	delete this->window_;
@@ -168,54 +194,116 @@ void Game::updateMenu()
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
-		if (this->button_1->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		if (this->buttons_[0]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
+			// poziom 1 
 			this->isMenu_ = false;
-			std::cout << "button_1 clicked\n";
-
-			// tworzenie poziomu
-			this->level_ = new Level(this->player_, this->window_, &this->textures_,"Level/Level1.txt");
+			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level1.txt");
 		}
-		else if (this->button_2->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		else if (this->buttons_[1]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
+			// poziom 2
 			this->isMenu_ = false;
-			std::cout << "button_2 clicked\n";
-
-			// tworzenie poziomu
 			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level2.txt");
 		}
-		else if (this->button_3->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		else if (this->buttons_[2]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
+			// poziom 3
 			this->isMenu_ = false;
-			std::cout << "button_3 clicked\n";
-
-			// tworzenie poziomu
 			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level3.txt");
 		}
 	}
 }
 
+void Game::updateLevel()
+{
+	/*
+		@returns void
+
+		funkcja odpowiedzialna za aktualizowanie rozgrywki oraz jej zakoñczenie
+		- wywo³anie Level::update() - aktualizacja rozgrywki
+		- zakoñczenie rozgrywki - wygrana
+			> dzieje siê po zabiciu wszystkich przeciwników
+			> reset poziomu
+			> prze³¹czenie Game::update() i Game::render() na menu
+		- zakoñczenie rozgrywki - przegrana
+			> dzieje siê gdy zdrowie gracza spadnie do 0
+			> reset poziomu
+			> reset gracza
+			> prze³¹czenie Game::update() i Game::render() na menu
+	*/
+
+	// updating
+	this->level_->update();
+
+	// winning
+	if (this->level_->allEnemiesKilled())
+	{
+		delete this->level_;
+
+		this->menuTexts_[0]->setString("Great win!");
+		this->isMenu_ = true;
+	}
+
+	// losing
+	else if (this->level_->getPlayerHp() <= 0)
+	{
+		delete this->level_;
+		delete this->player_;
+		this->initPlayer();
+
+		this->menuTexts_[0]->setString("skill issue");
+		this->isMenu_ = true;
+	}
+}
+
 void Game::update()
 {
+	/*
+		@returns void
+
+		funkcja odpowiedzialna za aktualizacje stanu programu w pêtli g³ównej Game::run()
+		- zapisuje bie¿¹c¹ pozycjê myszy
+		- na podstawie flagi Game::isMenu_ wywo³uje
+			> true   ->  updateMenu() 
+			> false  ->  updateLevel()
+	*/
+
 	this->mousePos_ = sf::Mouse::getPosition(*this->window_);
 
 	if (this->isMenu_)
 		this->updateMenu();
 	else
-		this->level_->update();
+		this->updateLevel();
 }
 
 // RENDERS
 
 void Game::renderMenu()
 {
-	this->window_->draw(*this->button_1);
-	this->window_->draw(*this->button_2);
-	this->window_->draw(*this->button_3);
+	for (auto& btn : buttons_)
+	{
+		this->window_->draw(*btn);
+	}
+	for (auto& txt : menuTexts_)
+	{
+		this->window_->draw(*txt);
+	}
 }
 
 void Game::render()
 {
+	/*
+		@returns void
+	
+		funkcja odpowiedzialna za wyrysowywanie aktualnego stanu programu na ekranie
+		- czyœci okno programu
+		- na podstawie flagi Game::isMenu_ wyrysowuje klatkê na oknie Game::window_, wywo³uj¹c
+			> true   ->  renderMenu() 
+			> false  ->  renderLevel()
+		- wyœwietla wyrenderowan¹ klatkê na ekranie
+	*/
+
 	// Clearing
 	this->window_->clear();
 

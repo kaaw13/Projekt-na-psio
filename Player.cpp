@@ -9,8 +9,10 @@ void Player::initVariables()
     this->movementSpeed_ = 4.0f;
     this->maxHp_ = 10;
     this->hp_ = maxHp_;
-    this->shotCooldown_ = sf::seconds(1.f);
     this->damage_ = 5;
+    this->shotCooldown_ = sf::seconds(0.7f);
+    this->immunityCooldown_ = sf::seconds(2.f);
+    this->immunity_ = false;
 }
 
 void Player::initSprite(sf::Texture* texture)
@@ -22,10 +24,13 @@ void Player::initSprite(sf::Texture* texture)
     this->sprite_.scale(sf::Vector2f(0.4f, 0.4f));
 }
 
-void Player::initClock()
+void Player::initClocks()
 {
     this->timeSinceLastShot_ = sf::Time::Zero;
     this->shotClock_.restart();
+
+    this->timeSinceDamaged_ = sf::Time::Zero;
+    this->immunityClock_.restart();
 }
 
 ///
@@ -45,6 +50,7 @@ Player::Player(sf::Texture* texture)
 
 	this->initVariables();
 	this->initSprite(texture);
+    this->initClocks();
 }
 
 Player::~Player()
@@ -82,10 +88,15 @@ void Player::setCurrentHp(unsigned new_hp)
 
 void Player::damage(unsigned damage)
 {
-    this->hp_ -= damage;
+    if (!immunity_)
+    {
+        this->hp_ -= damage;
+        if (this->hp_ < 0)
+            this->hp_ = 0;
 
-    if (this->hp_ < 0) 
-        this->hp_ = 0;
+        this->immunity_ = true;
+        this->timeSinceDamaged_ = sf::Time::Zero;
+    }
 }
 
 void Player::heal(unsigned heal)
@@ -112,6 +123,14 @@ void Player::changeDamage(int amount)
 
     if (this->damage_ < 1)
         this->damage_ = 1;
+}
+
+void Player::updateImmunity()
+{
+    this->timeSinceDamaged_ += this->immunityClock_.restart();
+
+    if (this->timeSinceDamaged_ > this->immunityCooldown_)
+        this->immunity_ = false;
 }
 
 ///
@@ -141,9 +160,11 @@ void Player::move()
         this->sprite_.move(this->movementSpeed_, 0.f);
     }
 }
+
 void Player::update()
 {
     this->timeSinceLastShot_ += this->shotClock_.restart();
+    this->updateImmunity();
     this->move();
 }
 
