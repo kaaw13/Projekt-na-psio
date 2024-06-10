@@ -1,63 +1,56 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-
 #include "Bullet.h"
+#include "Entity.h"
 
-class Player
+class Player : public Entity
 {
 private:
 	/// VARIABLES
-	sf::Sprite sprite_;
+	// textures
+	sf::Texture* defaultTexture_;
+	sf::Texture* immunityTexture_;
 
-	float movementSpeed_;
-	unsigned maxHp_;
-	int hp_;
-	unsigned damage_;
-
+	// shooting
 	sf::Clock shotClock_;
 	sf::Time shotCooldown_;
 	sf::Time timeSinceLastShot_;
 
+	// immunity
+	bool immunity_;
+	sf::Clock immunityClock_;
+	sf::Time immunityDuration_;
+	sf::Time timeSinceDamaged_;
+
+	// healthbar
+	sf::Vector2f windowSize_;
+	sf::RectangleShape healthbar_;
+	sf::RectangleShape healthbarBack_;
+
 	/// INIT FUNCTIONS
 	void initVariables();
-	void initSprite(sf::Texture* texture);
-	void initClock();
+	void initClocks();
+	void initGui();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Player(sf::Texture* texture);
+	Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size);
 	virtual ~Player();
 
 	/// GETTERS
 	const float getTimeSinceLastShoot() const;
 	const float getShootCooldown() const;
 
-	// inline
-	inline const sf::Vector2f& getPos()       const { return this->sprite_.getPosition(); };
-	inline const sf::FloatRect getBounds()    const { return this->sprite_.getGlobalBounds(); };
-	inline const unsigned	   getMaxHp()     const { return this->maxHp_; };
-	inline const int		   getHp()		  const { return this->hp_; };
-	inline const unsigned	   getDamage()	  const { return this->damage_; };
-
 	/// SETTERS
-	void setPosition(const float x, const float y);
-	void setCurrentHp(unsigned new_hp);
 	void damage(unsigned damage);
-	void heal(unsigned heal);
-	void setMaxHp(unsigned new_max_hp);
 	void resetTimeSinceLastShot();
-	void changeDamage(int amount);
 
 	/// FUNCTIONS.
-	void move();
-	void update();
+	void moveWasd();
+	void updateImmunity();
+	void updateGui();
+	void renderGui(sf::RenderTarget& target);
 
-	void render(sf::RenderTarget& target);
+	void update();
 };
 

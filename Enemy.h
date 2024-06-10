@@ -1,45 +1,35 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
+#include "Entity.h"
 
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-
-class Enemy
+class Enemy : public Entity
 {
 private:
 	/// VARIABLES
-	sf::Sprite sprite_;
-
-	float movementSpeed_;
-	unsigned maxHp_;
-	int hp_;
-	unsigned damage_;
+	bool isStunned_;
+	sf::Clock stunClock_;
+	sf::Time stunDuration_;
+	sf::Time timeSinceStunned_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
-	void initSprite(sf::Vector2f position, sf::Texture* texture);
+	void initClocks();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Enemy(sf::Vector2f position, sf::Texture* texture);
+	Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp);
 	virtual ~Enemy();
 
 	/// GETTERS
-	// inline
-	inline const sf::Vector2f& getPos()    const { return this->sprite_.getPosition(); };
-	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
-	inline const unsigned	   getDamage() const { return this->damage_; };
-	inline const int		   getHp()	   const { return this->hp_; };
 
 	/// SETTERS
 	void damage(unsigned damage);
+	void stun();
+	void setStunDuration(sf::Time duration);
 
 	/// FUNCTIONS
 	void move(float px, float py);
+	void updateStun();
+	void update();
 	void update(sf::Vector2f playerPos);
-
-	void render(sf::RenderTarget& target);
 };

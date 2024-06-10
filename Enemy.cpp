@@ -6,27 +6,25 @@
 
 void Enemy::initVariables()
 {
-	this->movementSpeed_ = 0.5f;
-	this->maxHp_ = 10;
-	this->hp_ = maxHp_;
-	this->damage_ = 4;
+	this->isStunned_ = false;
+	this->stunDuration_ = sf::seconds(2.f);
 }
 
-void Enemy::initSprite(sf::Vector2f position, sf::Texture* texture)
+void Enemy::initClocks()
 {
-	this->sprite_.setTexture(*texture);
-	this->sprite_.setPosition(position);
-	this->sprite_.setScale(sf::Vector2f(0.4f, 0.4f));
+	this->timeSinceStunned_ = sf::Time::Zero;
+	this->stunClock_.restart();
 }
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture)
+Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp)
+	: Entity(position, texture, scale, speed, damage, maxHp)
 {
 	this->initVariables();
-	this->initSprite(position, texture);
+	this->initClocks();
 }
 
 Enemy::~Enemy()
@@ -44,10 +42,19 @@ Enemy::~Enemy()
 
 void Enemy::damage(unsigned damage)
 {
-	this->hp_ -= damage;
+	this->Entity::damage(damage);
+	this->stun();
+}
 
-	if (this->hp_ < 0)
-		this->hp_ = 0;
+void Enemy::stun()
+{
+	this->isStunned_ = true;
+	this->timeSinceStunned_ = sf::Time::Zero;
+}
+
+void Enemy::setStunDuration(sf::Time duration)
+{
+	this->stunDuration_ = duration;
 }
 
 ///
@@ -74,16 +81,17 @@ void Enemy::move(float px, float py)
 	*/
 
 	float Vx, Vy;
+	sf::FloatRect bounds = this->getBounds();
 
 	// 1) wektor przesuniêcia
-	float rx = px - this->getPos().x;
-	float ry = py - this->getPos().y;
+	float rx = px - (bounds.left + bounds.width/2);
+	float ry = py - (bounds.top + bounds.height/2);
 
 	// 2) stosunek Vx/Vy
 	float ratio = rx / ry;
 
 	// 3) obliczenie Vy
-	Vy = this->movementSpeed_ / sqrt(pow(ratio, 2) + 1);
+	Vy = this->Entity::getSpeed() / sqrt(pow(ratio, 2) + 1);
 
 	// 4) zwrot Vy
 	if (ry < 0)
@@ -93,15 +101,26 @@ void Enemy::move(float px, float py)
 	Vx = ratio * Vy;
 
 	// 6) ruch
-	this->sprite_.move(sf::Vector2f(Vx, Vy));
+	this->Entity::move(sf::Vector2f(Vx, Vy));
+}
+
+void Enemy::updateStun()
+{
+	this->timeSinceStunned_ += this->stunClock_.restart();
+
+	if (this->timeSinceStunned_ > this->stunDuration_)
+		this->isStunned_ = false;
+}
+
+void Enemy::update()
+{
+	//
 }
 
 void Enemy::update(sf::Vector2f playerPos)
 {
-	this->move(playerPos.x, playerPos.y);
-}
+	this->updateStun();
 
-void Enemy::render(sf::RenderTarget& target)
-{
-	target.draw(this->sprite_);
+	if (!this->isStunned_)
+		this->move(playerPos.x, playerPos.y);
 }

@@ -1,17 +1,59 @@
-#include "Level.h"
+Ôªø#include "Level.h"
 
 ///
 /// INIT FUNCTIONS
 ///
 
-void Level::initTextures(std::map<std::string, sf::Texture*>* textures)
+void Level::initVariables()
 {
-	this->textures_ptr = textures;
+	this->enemyCounter_ = 0;
+	this->wave_1 = true;
+	this->wave_2 = false;
+	this->wave_3 = false;
+	this->bossFight_ = false;
+
+	this->waveCooldown_ = sf::seconds(1.f);
 }
 
-void Level::initPlayer()
+void Level::initFromFiles(std::string path)
 {
-	this->player_->setPosition(this->window_->getSize().x / 2, this->window_->getSize().y / 2);
+	/*
+		@returns void
+
+		funkcja wczytujaca dane z pliku
+		- otwarcie pliku
+		- sprawdzenie czy plik jest otwarty
+		- wczytanie danych
+		- zamkniecie pliku
+	*/
+
+	std::ifstream file(path);
+
+	if (file.is_open())
+	{
+
+		std::string line;
+		std::vector<std::string> data;
+
+		while (std::getline(file, line))
+		{
+			data.push_back(line);
+		}
+
+		this->background_texture_key = data[0];
+		this->enemy_texture_key		 = data[1];
+		this->enemySpeed_			 = std::stof(data[2]);
+		this->enemyMaxHp_			 = std::stoi(data[3]);
+		this->enemyDamage_			 = std::stoi(data[4]);
+		this->numberOfEnemies_		 = std::stoi(data[5]);
+		this->spawnCooldown_         = sf::seconds(stof(data[6]));
+	}
+	else
+	{
+		std::cout << "ERROR: Level::initFromFiles() - could not open file\n";
+	}
+
+	file.close();
 }
 
 void Level::initBackground()
@@ -19,48 +61,43 @@ void Level::initBackground()
 	/*
 		@returns void
 
-		pierwszy * to dereferacja wskaünika prowadzπca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wskaünik do szukanej tekstury, ktÛry deferencj(ujemy?) i
-		otrzymujemy juø samπ teksturÍ.
+		pierwszy * to dereferacja wska≈∫nika prowadzƒÖca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wska≈∫nik do szukanej tekstury, kt√≥ry deferencj(ujemy?) i
+		otrzymujemy ju≈º samƒÖ teksturƒô.
 	*/
 
 	this->background_ = new sf::Sprite;
-	this->background_->setTexture(*(*textures_ptr)["BACKGROUND_1"]);
+	this->background_->setTexture(*(*textures_ptr)[this->background_texture_key]);
 }
 
-void Level::initEnemies()
+void Level::initClocks()
 {
-	//
-}
-
-void Level::initClock()
-{
-	this->spawnCooldown_ = sf::seconds(1.f);
 	this->spawnClock_ = new sf::Clock;
+	this->waveCooldownClock_ = new sf::Clock;
 }
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures)
+Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path)
 	: player_(player), window_(window), textures_ptr(textures)
 {
 	/*
 		@constructor
 
-		Na liúcie inicjalizacyjnej kopiuje wskaüniki bezpoúrednio do
+		Na li≈õcie inicjalizacyjnej kopiuje wska≈∫niki bezpo≈õrednio do
 		- Game::player_
 		- Game::window_
 		- Game::textures_
-		NastÍpnie wywo≥uje funkcje inicjalizacyjne
+		Nastƒôpnie wywo≈Çuje funkcje inicjalizacyjne
 	*/
 
-	std::cout << "new level\n";
+	std::cout << "new level; path: " << path << "\n";
 
-	this->initPlayer();
+	this->initFromFiles(path);
+	this->initVariables();
 	this->initBackground();
-	this->initEnemies();
-	this->initClock();
+	this->initClocks();
 }
 
 Level::~Level()
@@ -73,11 +110,23 @@ Level::~Level()
 	{
 		delete el;
 	}
+	delete this->boss_;
 }
 
 ///
 /// GETTERS
 ///
+
+const bool Level::bossDefeated() const
+{
+	if (this->bossFight_ && this->boss_->getHp() <= 0)
+	{
+		std::cout << "enemy counter = " << enemyCounter_ << " - enemies_.size() = " << enemies_.size() << std::endl;
+		return true;
+	}
+	else
+		return false;
+}
 
 ///
 /// SETTERS
@@ -94,7 +143,7 @@ void Level::playerWindowCollision()
 	/*
 		@returns void
 
-		funkcja odpowiedzialna za utrzymanie gracza w oknie - cofa go jeøeli ten prÛbuje siÍ z niego wydostaÊ
+		funkcja odpowiedzialna za utrzymanie gracza w oknie - cofa go je≈ºeli ten pr√≥buje siƒô z niego wydostaƒá
 	*/
 
 	sf::Vector2u window_size = this->window_->getSize();
@@ -128,9 +177,9 @@ sf::Vector2f Level::randSpawnPosition()
 	/*
 		@returns sf::Vector2f 
 
-		funkcja generujπca losowπ pozycjÍ spawnu dla przeciwnikÛw, 
-		w jednym z czterech obszarÛw znajdujπcych siÍ zaraz za krawÍdziπ okna
-		- tworzy tymczasowπ zmiennπ windowSize
+		funkcja generujƒÖca losowƒÖ pozycjƒô spawnu dla przeciwnik√≥w, 
+		w jednym z czterech obszar√≥w znajdujƒÖcych siƒô zaraz za krawƒôdziƒÖ okna
+		- tworzy tymczasowƒÖ zmiennƒÖ windowSize
 		- losuje obszar pod, nad, na lewo lub na prawo od okna [switch]
 		- ustala x i y
 		- zwraca [x, y]
@@ -166,25 +215,141 @@ sf::Vector2f Level::randSpawnPosition()
 	return sf::Vector2f(x, y);
 }
 
-void Level::enemySpawning()
+void Level::createEnemy()
+{
+	/*
+		- dodanie przeciwnika, z u≈ºyciem funkcji randSpawnPosition() nadajƒÖcej mu poczƒÖtkowƒÖ pozycjƒô
+		- restart spawnClock_
+		- pierwszy * to dereferacja wska≈∫nika prowadzƒÖca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wska≈∫nik do szukanej tekstury, kt√≥ry deferencj(ujemy?) i
+		otrzymujemy ju≈º samƒÖ teksturƒô.
+	*/
+
+	this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], { 0.6f, 0.6f }, enemySpeed_, enemyDamage_, enemyMaxHp_));
+	this->spawnClock_->restart();
+	this->enemyCounter_++;
+	std::cout << "enemy number " << enemyCounter_ << std::endl;
+}
+
+void Level::nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change)
 {
 	/*
 		@returns void
 
-		funckja tworzy nowego przeciwnika i dodaje do wektora enemies_, raz na czas okreslony w zmiennej spawnCooldow_
-		Do konstruktora klasy enemy przekazuje pozycjÍ spawnu oraz teksturÍ.
-		- sprawdzenie czy up≥ynπ≥ czas
-		- dodanie przeciwnika, z uøyciem funkcji randSpawnPosition() nadajπcej mu poczπtkowπ pozycjÍ
-		- restart spawnClock_
-		- pierwszy * to dereferacja wskaünika prowadzπca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wskaünik do szukanej tekstury, ktÛry deferencj(ujemy?) i
-		otrzymujemy juø samπ teksturÍ.
-	
+		prze≈ÇƒÖcza fale
 	*/
 
-	if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds()) 
+	this->enemyCounter_ = 0;
+	this->numberOfEnemies_ = static_cast<unsigned>(static_cast<float>(numberOfEnemies_) * enemy_amount_change);
+	this->spawnCooldown_ = sf::seconds(this->spawnCooldown_.asSeconds() * spawn_cooldown_change);
+	prev_wave = false;
+	next_wave = true;
+
+	this->waveCooldownClock_->restart();
+}
+
+void Level::updateWave()
+{
+	/*
+		@returns void
+
+		kontroluje etap rozgrywki
+	*/
+
+	if (this->waveCooldownClock_->getElapsedTime().asSeconds() >= this->waveCooldown_.asSeconds())
 	{
-		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)["ENEMY_SHEET"]));
-		this->spawnClock_->restart();
+		/// FALA 1
+		if (this->wave_1)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// nastƒôpna fala
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+				this->nextWave(this->wave_1, this->wave_2, 2.f, 0.5f);
+		}
+		/// FALA 2
+		else if (this->wave_2)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// nastƒôpna fala
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+				this->nextWave(this->wave_2, this->wave_3, 1.f, 0.5f);
+		}
+		/// FALA 3
+		else if (this->wave_3)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// nastƒôpna fala - boos fight
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+			{
+				this->nextWave(this->wave_3, this->bossFight_, 1.f, 0.f);
+				this->boss_ = new Boss({-100.f, -100.f}, (*textures_ptr)[enemy_texture_key], {2.f, 2.f}, 0.7f, 7, 200);
+			}
+		}
+	}
+}
+
+void Level::enemyKnockback(Enemy* enemy, Entity* entity, float knockback)
+{
+	/*
+
+	*/
+
+	float Vx, Vy;
+
+	float rx = entity->getPos().x - enemy->getPos().x;
+	float ry = entity->getPos().y - enemy->getPos().y;
+	float ratio = rx / ry;
+
+	Vy = knockback / sqrt(pow(ratio, 2) + 1);
+	if (ry < 0)
+		Vy = -Vy;
+
+	Vx = ratio * Vy;
+	enemy->Entity::move(sf::Vector2f(-Vx, -Vy));
+}
+
+void Level::enemyCollision(Enemy* enemy)
+{
+	/*
+		@returns void
+
+		funkcja rozwiƒÖzujƒÖca kolizje pomiƒôdzy Enemy, a innymi Entity, kolejno
+		- enemy - player
+		- enemy - boss
+		- enemy - enemy
+	*/
+
+	// enemy - player collision
+	if (enemy->getHitbox().intersects(this->player_->getBounds()))
+	{
+		this->player_->damage(enemy->getDamage());
+		this->enemyKnockback(enemy, this->player_, 40.f);
+		enemy->stun();
+	} 
+	// enemy - enemy collision
+	for (auto& _enemy : this->enemies_)
+	{
+		if (enemy != _enemy)
+		{
+			if (enemy->getHitbox().intersects(_enemy->getHitbox()))
+				this->enemyKnockback(enemy, _enemy, 10.f);
+		}
+	}
+	// enemy - boss collision
+	if (bossFight_)
+	{
+		if (enemy->getHitbox().intersects(this->boss_->getBounds()))
+		{
+			this->enemyKnockback(enemy, this->boss_, 10.f);
+		}
 	}
 }
 
@@ -193,7 +358,24 @@ void Level::deleteEnemy(unsigned& counter)
 	delete this->enemies_.at(counter);
 	this->enemies_.erase(this->enemies_.begin() + counter);
 	--counter;
-	std::cout << "enemy deleted\n";
+}
+
+void Level::updateBoss()
+{
+
+	// ruch
+	this->boss_->update(this->player_->getPos());
+
+	// kolizja z graczem
+	if (this->boss_->getHitbox().intersects(this->player_->getBounds()))
+	{
+		this->player_->damage(boss_->getDamage());
+		this->enemyKnockback(boss_, this->player_, 20.f);
+		boss_->stun();
+	}
+
+	// gui
+	this->boss_->updateGui();
 }
 
 void Level::updateEnemies()
@@ -207,17 +389,17 @@ void Level::updateEnemies()
 	*/
 
 	unsigned counter = 0;
-	for (auto& enemy : enemies_)
+	for (auto& enemy : this->enemies_)
 	{
 		enemy->update(this->player_->getPos());
+
+		this->enemyCollision(enemy);
 
 		if (enemy->getHp() <= 0)
 			this->deleteEnemy(counter);
 
 		++counter;
 	}
-
-	this->enemySpawning();
 }
 
 //			 BULLET RELATED				//
@@ -228,11 +410,11 @@ void Level::shoting()
 		@return void
 
 		funkcja odpowiedzialna za strzelanie
-		- jeøeli wciúniÍty jest lewy przycisk myszy
-		- i jeøeli minπ≥ minimalny czas od ostatniego oddanego strza≥u
-		- tworzony jest sf::Vector2f z pozycjπ myszy w stosunku do okna, aby wykrozystaÊ go w konstruktorze obiektu BULLET
+		- je≈ºeli wci≈õniƒôty jest lewy przycisk myszy
+		- i je≈ºeli minƒÖ≈Ç minimalny czas od ostatniego oddanego strza≈Çu
+		- tworzony jest sf::Vector2f z pozycjƒÖ myszy w stosunku do okna, aby wykrozystaƒá go w konstruktorze obiektu BULLET
 		- stworzenie nowego obiektu BULLET i dodanie go do Level::bullets_
-		- zresetowanie czasu od ostaniego strza≥u Player::resetTimeSinceLastShot()
+		- zresetowanie czasu od ostaniego strza≈Çu Player::resetTimeSinceLastShot()
 	*/
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -248,24 +430,24 @@ void Level::shoting()
 	}
 }
 
-bool Level::bulletCollision(Bullet* bullet, unsigned& counter)
+bool Level::bulletEnemyCollision(Bullet* bullet, unsigned& counter)
 {
 	/*
-		@returns bool - czy kula zosta≥a usuniÍta?
+		@returns bool - czy kula zosta≈Ça usuniƒôta?
 
-		wykonywana w pÍtli funkcji Level::updateBullets() dla kaødej kuli w Level::bullets_,
-		sprawdza czy dosz≥o do kolizji z ktÛrymú z przeciwnikÛw, jeúli tak to wykonuje kolizje
-		- iteracja po kaødym elemencie Level::enemies_
-		- sprawdzenie czy dosz≥o do kolizji
-		- jeúli tak:
-			> zadanie obraøeÒ rpzeciwnikowi
-			> usuniÍcie kuli funkcjπ Level::deleteBullet(counter)
-			> zwrÛcenie wartoúci true (kula zosta≥a usuniÍta)
-		- jeúli nie:
-			> zwrÛcenie wartoúci false (kula nie zosta≥a usuniÍta)
+		wykonywana w pƒôtli funkcji Level::updateBullets() dla ka≈ºdej kuli w Level::bullets_,
+		sprawdza czy dosz≈Ço do kolizji z kt√≥rym≈õ z przeciwnik√≥w, je≈õli tak to wykonuje kolizje
+		- iteracja po ka≈ºdym elemencie Level::enemies_
+		- sprawdzenie czy dosz≈Ço do kolizji
+		- je≈õli tak:
+			> zadanie obra≈ºe≈Ñ rpzeciwnikowi
+			> usuniƒôcie kuli funkcjƒÖ Level::deleteBullet(counter)
+			> zwr√≥cenie warto≈õci true (kula zosta≈Ça usuniƒôta)
+		- je≈õli nie:
+			> zwr√≥cenie warto≈õci false (kula nie zosta≈Ça usuniƒôta)
 	*/
 
-	for (auto& enemy : enemies_)
+	for (auto& enemy : this->enemies_)
 	{
 		if (bullet->getBounds().intersects(enemy->getBounds()))
 		{
@@ -280,18 +462,18 @@ bool Level::bulletCollision(Bullet* bullet, unsigned& counter)
 bool Level::cullBullet(Bullet* bullet, unsigned& counter)
 {
 	/*
-		@returns bool - czy kula zosta≥a usuniÍta?
+		@returns bool - czy kula zosta≈Ça usuniƒôta?
 
-		wykonywana w pÍtli funkcji Level::updateBullets() dla kaødej kuli w Level::bullets_,
-		jeøeli kula nie zosta≥a jeszcze usuniÍta w funkcji Level::bulletCollision(...),
-		sprawdza czy kula opuúci≥a okno programu
+		wykonywana w pƒôtli funkcji Level::updateBullets() dla ka≈ºdej kuli w Level::bullets_,
+		je≈ºeli kula nie zosta≈Ça jeszcze usuniƒôta w funkcji Level::bulletCollision(...),
+		sprawdza czy kula opu≈õci≈Ça okno programu
 		- zmienna pomocnicza bounds
-		- sprawdzenie czy kula opuúci≥a okno programu
-		- jeúli tak:
-			> usuniÍcie kuli funkcjπ Level::deleteBullet(counter)
-			> zwrÛcenie wartoúci true (kula zosta≥a usuniÍta)
-		- jeúli nie:
-			> zwrÛcenie wartoúci false (kula nie zosta≥a usuniÍta)
+		- sprawdzenie czy kula opu≈õci≈Ça okno programu
+		- je≈õli tak:
+			> usuniƒôcie kuli funkcjƒÖ Level::deleteBullet(counter)
+			> zwr√≥cenie warto≈õci true (kula zosta≈Ça usuniƒôta)
+		- je≈õli nie:
+			> zwr√≥cenie warto≈õci false (kula nie zosta≈Ça usuniƒôta)
 	*/
 
 	sf::FloatRect bounds = bullet->getBounds();
@@ -309,15 +491,14 @@ void Level::deleteBullet(unsigned& counter)
 	/*
 		@return void
 
-		- usuwa obiekt pod wskaüniekiem
-		- usuwa wskaünik
+		- usuwa obiekt pod wska≈∫niekiem
+		- usuwa wska≈∫nik
 		- aktualizuje counter
 	*/
 
 	delete this->bullets_.at(counter);
 	this->bullets_.erase(this->bullets_.begin() + counter);
 	--counter;
-	std::cout << "bullet deleted\n";
 }
 
 void Level::updateBullets()
@@ -326,20 +507,36 @@ void Level::updateBullets()
 		@returns void
 
 		funkcja odpowiada za aktualizowanie oraz usuwanie kul
-		- counter - zmienna pomocnicza s≥uøπca do prawid≥owego usuwania kul
-		- pÍtla iterujπca po wszystkich elementach Level::bullets_
+		- counter - zmienna pomocnicza s≈Çu≈ºƒÖca do prawid≈Çowego usuwania kul
+		- pƒôtla iterujƒÖca po wszystkich elementach Level::bullets_
 		- przemieszczenie kuli przez Bullet::update() 
 		- sprawdzenie kolizji z przeciwnikiem przez Level::bulletCollision(...)
-		- jeøeli do kolizji nie dosz≥o - sprawdzenie czy kula opuúci≥a ekran przez Level::cullBullet(...)
+		- je≈ºeli do kolizji nie dosz≈Ço - sprawdzenie czy kula opu≈õci≈Ça ekran przez Level::cullBullet(...)
 	*/
 
 	unsigned counter = 0;
-	for (auto& bullet : bullets_)
+	for (auto& bullet : this->bullets_)
 	{
 		bullet->update();
 
-		if (!this->bulletCollision(bullet, counter))
-			this->cullBullet(bullet, counter);	
+		bool is_deleted = false;
+
+		// bullet - enemy
+		is_deleted = this->bulletEnemyCollision(bullet, counter);
+		
+		// bullets out of window
+		if(!is_deleted)
+			is_deleted = this->cullBullet(bullet, counter);	
+
+		// bullet - boss
+		if (bossFight_ && !is_deleted)
+		{
+			if (bullet->getBounds().intersects(this->boss_->getHitbox()))
+			{
+				this->boss_->damage(bullet->getDamage());
+				this->deleteBullet(counter);
+			}
+		}
 
 		++counter;
 	}
@@ -355,13 +552,18 @@ void Level::update()
 
 	this->updateBullets();
 	this->updateEnemies();
+
+	if (bossFight_)
+		this->updateBoss();
+
+	this->updateWave();
 }
 
 //			RENDERING			//
 
 void Level::renderEnemies()
 {
-	for (auto& el : enemies_)
+	for (auto& el : this->enemies_)
 	{
 		el->render(*this->window_);
 	}
@@ -369,7 +571,7 @@ void Level::renderEnemies()
 
 void Level::renderBullets()
 {
-	for (auto& el : bullets_)
+	for (auto& el : this->bullets_)
 	{
 		el->render(*this->window_);
 	}
@@ -380,6 +582,15 @@ void Level::render()
 	this->window_->draw(*this->background_);
 
 	this->renderBullets();
+
 	this->player_->render(*this->window_);
+	this->player_->renderGui(*this->window_);
+
 	this->renderEnemies();
+
+	if (bossFight_)
+	{
+		this->boss_->render(*this->window_);
+		this->boss_->renderGui(*this->window_);
+	}
 }

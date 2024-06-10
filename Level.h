@@ -1,43 +1,64 @@
 #pragma once
 
 #include "Player.h"
-#include "Enemy.h"
+#include "Boss.h"
+
+#include <fstream>
+#include <vector>
 
 class Level
 {
 private:
 	/// VARIABLES
+	// from file
+	std::string background_texture_key;
+	std::string enemy_texture_key;
+	float enemySpeed_;
+	unsigned enemyMaxHp_;
+	unsigned enemyDamage_;
 
-	// base
+	unsigned numberOfEnemies_;
+	unsigned enemyCounter_;
+
+	// window
 	sf::RenderWindow* window_;
+	sf::Sprite* background_;
 
 	// textures
 	std::map<std::string, sf::Texture*>* textures_ptr;
-	sf::Sprite* background_;
 
 	// player
 	Player* player_;
 	std::vector<Bullet*> bullets_;
 
-	// enemies.
+	// enemies
 	std::vector<Enemy*> enemies_;
+	Boss* boss_;
+
 	sf::Clock* spawnClock_;
 	sf::Time spawnCooldown_;
 
-	/// INIT FUNCTIONS
-	void initTextures(std::map<std::string, sf::Texture*>* textures);
-	void initPlayer();
+	// waves
+	sf::Clock* waveCooldownClock_;
+	sf::Time waveCooldown_;
+	bool wave_1, wave_2, wave_3, bossFight_;
+
+	/// INIT FUNCTIONS.
+	void initVariables();
+	void initFromFiles(std::string path);
 	void initBackground();
-	void initEnemies();
-	void initClock();
+	void initClocks();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures);
+	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path);
 	virtual ~Level();
 
 	/// GETTERS
+	const bool bossDefeated() const;
 
+	// inline
+	inline const unsigned getPlayerHp() const { return this->player_->getHp(); };
 
 	/// SETTERS
 
@@ -47,11 +68,18 @@ public:
 	void playerWindowCollision();
 
 	sf::Vector2f randSpawnPosition();
-	void enemySpawning();
+	void createEnemy();
+	void nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change);
+	void updateWave();
+
+	void enemyCollision(Enemy* enemy);
+	void enemyKnockback(Enemy* enemy, Entity* entity, float knockback);
 	void updateEnemies();
 	void deleteEnemy(unsigned& counter);
 
-	bool bulletCollision(Bullet* bullet, unsigned& counter);
+	void updateBoss();
+
+	bool bulletEnemyCollision(Bullet* bullet, unsigned& counter);
 	bool cullBullet(Bullet* bullet, unsigned& counter);
 	void deleteBullet(unsigned& counter);
 	void updateBullets();

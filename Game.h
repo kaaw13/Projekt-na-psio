@@ -17,11 +17,13 @@ private:
 	sf::Vector2i mousePos_;
 
 	// menu
-	sf::RectangleShape* button_1;
+	std::vector<sf::RectangleShape*> buttons_;
+	std::vector<sf::Text*> menuTexts_;
 	bool isMenu_;
 
 	// resources
 	std::map<std::string, sf::Texture*> textures_;
+	std::vector<sf::Font*> fonts_;
 
 	// player
 	Player* player_;
@@ -33,6 +35,9 @@ private:
 	void initWindow();
 	void initTextures();
 	void initPlayer();
+
+	void initButtons();
+	void initText();
 	void initMenu();
 
 public:
@@ -49,6 +54,7 @@ public:
 
 	void updatePollEvents();
 	void updateMenu();
+	void updateLevel();
 	
 	void update();
 

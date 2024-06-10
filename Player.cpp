@@ -6,45 +6,52 @@
 
 void Player::initVariables()
 {
-    this->movementSpeed_ = 4.0f;
-    this->maxHp_ = 10;
-    this->hp_ = maxHp_;
-    this->shotCooldown_ = sf::seconds(1.f);
-    this->damage_ = 5;
+    this->shotCooldown_ = sf::seconds(0.7f);
+    this->immunityDuration_ = sf::seconds(2.f);
+    this->immunity_ = false;
 }
 
-void Player::initSprite(sf::Texture* texture)
-{
-	// Sets the texture to the sprite
-	this->sprite_.setTexture(*texture);
-
-	// Resize the sprite
-    this->sprite_.scale(sf::Vector2f(0.4f, 0.4f));
-}
-
-void Player::initClock()
+void Player::initClocks()
 {
     this->timeSinceLastShot_ = sf::Time::Zero;
     this->shotClock_.restart();
+
+    this->timeSinceDamaged_ = sf::Time::Zero;
+    this->immunityClock_.restart();
+}
+
+void Player::initGui()
+{
+    // healthbar
+    this->healthbar_.setSize(sf::Vector2f(300.f, 25.f));
+    this->healthbar_.setFillColor(sf::Color::Red);
+    this->healthbar_.setPosition(sf::Vector2f(10.f, this->windowSize_.y - 35.f));
+
+    this->healthbarBack_ = this->healthbar_;
+    this->healthbarBack_.setFillColor(sf::Color(25, 25, 25, 200));
 }
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 /// 
 
-Player::Player(sf::Texture* texture)
+Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size)
+    : Entity(position, default_texture, {0.6f, 0.6f}, 4.f, 5, 100), defaultTexture_(default_texture), immunityTexture_(immunity_texture), windowSize_(window_size)
 {
     /*
         @constructor
 
-        - na liúcie inicjalizacyjnej ustawia texture podanπ przez game
+        - na liúcie inicjalizacyjnej
+            > wywo≥uje konstruktor Entity i przekazuje mu odpowiednie argumenty
+            > ustawia wskaüniki do textur
         - wywo≥uje funkcje init
     */
 
     std::cout << "new player\n";
 
 	this->initVariables();
-	this->initSprite(texture);
+    this->initClocks();
+    this->initGui();
 }
 
 Player::~Player()
@@ -70,35 +77,27 @@ const float Player::getShootCooldown() const
 /// SETTERS
 ///
 
-void Player::setPosition(const float x, const float y)
-{
-	this->sprite_.setPosition(x, y);
-}
-
-void Player::setCurrentHp(unsigned new_hp)
-{
-    this->hp_ = new_hp;
-}
-
 void Player::damage(unsigned damage)
 {
-    this->hp_ -= damage;
+    /*
+        @returns void
 
-    if (this->hp_ < 0) 
-        this->hp_ = 0;
-}
+        if player doesnt have an immunity, damage is dealt and immunity is granted
+        - checking if player has immunity
+        - if not damage is dealt via Entity::damage(...)
+        - immunity is turned on
+        - timeSinceDamaged_ is reset
+        - texture is changed
+    */
 
-void Player::heal(unsigned heal)
-{
-    this->hp_ += heal;
+    if (!immunity_)
+    {
+        this->Entity::damage(damage);
 
-    if (this->hp_ > this->maxHp_)
-        this->hp_ = this->maxHp_;
-}
-
-void Player::setMaxHp(unsigned new_max_hp)
-{
-    this->maxHp_ = new_max_hp;
+        this->immunity_ = true;
+        this->timeSinceDamaged_ = sf::Time::Zero;
+        this->setTexture(immunityTexture_);
+    }
 }
 
 void Player::resetTimeSinceLastShot()
@@ -106,49 +105,77 @@ void Player::resetTimeSinceLastShot()
     this->timeSinceLastShot_ = sf::Time::Zero;
 }
 
-void Player::changeDamage(int amount)
-{
-    this->damage_ += amount;
-
-    if (this->damage_ < 1)
-        this->damage_ = 1;
-}
-
 ///
 /// FUNCTIONS
 ///
 
-void Player::move()
+// Updating
+
+void Player::updateImmunity()
+{
+    /*
+        @returns void 
+
+        funkcja liczy czas od ostatniego otrzymania obraøeÒ i wy≥πcza nietykalnoúÊ
+        - inkrementacja timeSinceDamaged_
+        - jeøeli wartoúÊ ta przekroczy Player::immunityDuration_
+            > nietykalnoúÊ jest wy≥πczana
+            > przywracana jest podstawowa tekstura gracza
+    */
+
+    this->timeSinceDamaged_ += this->immunityClock_.restart();
+
+    if (this->timeSinceDamaged_ > this->immunityDuration_)
+    {
+        this->immunity_ = false;
+        this->setTexture(defaultTexture_);
+    }
+}
+
+void Player::moveWasd()
 {
     // Move player up
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
     {
-        this->sprite_.move(0.f, -this->movementSpeed_);
+        this->Entity::move(sf::Vector2f(0.f, -this->Entity::getSpeed()));
     }
     // Move player down
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
     {
-        this->sprite_.move(0.f, this->movementSpeed_);
+        this->Entity::move(sf::Vector2f(0.f, this->Entity::getSpeed()));
     }
     // Move player left
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        this->sprite_.move(-this->movementSpeed_, 0.f);
+        this->Entity::move(sf::Vector2f(-this->Entity::getSpeed(), 0.f));
     }
     // Move player right
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        this->sprite_.move(this->movementSpeed_, 0.f);
+        this->Entity::move(sf::Vector2f(this->Entity::getSpeed(), 0.f));
     }
+}
+
+void Player::updateGui()
+{
+    // healthbar
+    float hpPercent = static_cast<float>(this->getHp()) / this->getMaxHp();
+    this->healthbar_.setSize(sf::Vector2f(hpPercent * this->healthbarBack_.getSize().x, this->healthbar_.getSize().y));
 }
 
 void Player::update()
 {
     this->timeSinceLastShot_ += this->shotClock_.restart();
-    this->move();
+    this->updateImmunity();
+    this->moveWasd();
+    this->updateGui();
 }
 
-void Player::render(sf::RenderTarget& target)
+// Rendering
+
+void Player::renderGui(sf::RenderTarget& target)
 {
-	target.draw(this->sprite_);
+    // healthbar
+    target.draw(this->healthbarBack_);
+    target.draw(this->healthbar_);
 }
