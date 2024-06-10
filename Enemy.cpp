@@ -4,21 +4,27 @@
 /// INIT FUNCTIONS
 ///
 
-void Enemy::initSprite(sf::Vector2f position, sf::Texture* texture)
+void Enemy::initVariables()
 {
-	this->sprite_.setTexture(*texture);
-	this->sprite_.setPosition(position);
-	this->sprite_.setScale(sf::Vector2f(0.4f, 0.4f));
+	this->isStunned_ = false;
+	this->stunDuration_ = sf::seconds(2.f);
+}
+
+void Enemy::initClocks()
+{
+	this->timeSinceStunned_ = sf::Time::Zero;
+	this->stunClock_.restart();
 }
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, float speed, unsigned maxHp, unsigned damage)
-	: movementSpeed_(speed), maxHp_(maxHp), hp_(maxHp), damage_(damage)
+Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned maxHp, unsigned damage)
+	: Entity(position, texture, scale, speed, damage, maxHp)
 {
-	this->initSprite(position, texture);
+	this->initVariables();
+	this->initClocks();
 }
 
 Enemy::~Enemy()
@@ -36,10 +42,14 @@ Enemy::~Enemy()
 
 void Enemy::damage(unsigned damage)
 {
-	this->hp_ -= damage;
+	this->Entity::damage(damage);
+	this->stun();
+}
 
-	if (this->hp_ < 0)
-		this->hp_ = 0;
+void Enemy::stun()
+{
+	this->isStunned_ = true;
+	this->timeSinceStunned_ = sf::Time::Zero;
 }
 
 ///
@@ -75,7 +85,7 @@ void Enemy::move(float px, float py)
 	float ratio = rx / ry;
 
 	// 3) obliczenie Vy
-	Vy = this->movementSpeed_ / sqrt(pow(ratio, 2) + 1);
+	Vy = this->Entity::getSpeed() / sqrt(pow(ratio, 2) + 1);
 
 	// 4) zwrot Vy
 	if (ry < 0)
@@ -85,15 +95,26 @@ void Enemy::move(float px, float py)
 	Vx = ratio * Vy;
 
 	// 6) ruch
-	this->sprite_.move(sf::Vector2f(Vx, Vy));
+	this->Entity::move(sf::Vector2f(Vx, Vy));
+}
+
+void Enemy::updateStun()
+{
+	this->timeSinceStunned_ += this->stunClock_.restart();
+
+	if (this->timeSinceStunned_ > this->stunDuration_)
+		this->isStunned_ = false;
+}
+
+void Enemy::update()
+{
+	//
 }
 
 void Enemy::update(sf::Vector2f playerPos)
 {
-	this->move(playerPos.x, playerPos.y);
-}
+	this->updateStun();
 
-void Enemy::render(sf::RenderTarget& target)
-{
-	target.draw(this->sprite_);
+	if (!this->isStunned_)
+		this->move(playerPos.x, playerPos.y);
 }

@@ -7,7 +7,7 @@
 void Game::initWindow()
 {
 	//this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "nazwa", sf::Style::Fullscreen);	// okno docelowe
-	this->window_ = new sf::RenderWindow(sf::VideoMode(800, 600), "nazwa", sf::Style::Close);		// okienko tymczasowe do wygodniejszego testowania
+	this->window_ = new sf::RenderWindow(sf::VideoMode(800, 600), "nazwa", sf::Style::Close);			// okienko tymczasowe do wygodniejszego testowania
 	this->window_->setFramerateLimit(144);
 	this->window_->setVerticalSyncEnabled(false);
 	std::cout << "initWindow\n";
@@ -15,7 +15,7 @@ void Game::initWindow()
 
 void Game::initPlayer()
 {
-	this->player_ = new Player(textures_["PLAYER_SHEET"]);
+	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2), textures_["PLAYER_SHEET"]);
 }
 
 void Game::initTextures()

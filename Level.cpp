@@ -49,16 +49,6 @@ void Level::initFromFiles(std::string path)
 	file.close();
 }
 
-void Level::initTextures(std::map<std::string, sf::Texture*>* textures)
-{
-	this->textures_ptr = textures;
-}
-
-void Level::initPlayer()
-{
-	this->player_->setPosition(this->window_->getSize().x / 2, this->window_->getSize().y / 2);
-}
-
 void Level::initBackground()
 {
 	/*
@@ -98,7 +88,6 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 	std::cout << "new level; path: " << path << "\n";
 
 	this->initFromFiles(path);
-	this->initPlayer();
 	this->initBackground();
 	this->initClock();
 }
@@ -232,27 +221,47 @@ void Level::enemySpawning()
 
 	if ((this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds()) && (this->enemyCounter_ < this->numberOfEnemies_))
 	{
-		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], enemySpeed_, enemyMaxHp_, enemyDamage_));
+		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], { 0.6f, 0.6f }, enemySpeed_, enemyMaxHp_, enemyDamage_));
 		this->spawnClock_->restart();
 		this->enemyCounter_++;
 		std::cout << "enemy number " << enemyCounter_ << std::endl;
 	}
 }
 
-void Level::enemyCollision(Enemy* enemy, Player* player)
+void Level::enemyKnockback(Enemy* enemy, Entity* entity, float knockback)
 {
-	if (enemy->getBounds().intersects(player->getBounds()))
+	float Vx, Vy;
+
+	float rx = entity->getPos().x - enemy->getPos().x;
+	float ry = entity->getPos().y - enemy->getPos().y;
+	float ratio = rx / ry;
+
+	Vy = knockback / sqrt(pow(ratio, 2) + 1);
+	if (ry < 0)
+		Vy = -Vy;
+
+	Vx = ratio * Vy;
+	enemy->Entity::move(sf::Vector2f(-Vx, -Vy));
+}
+
+void Level::enemyCollision(Enemy* enemy, Entity* entity)
+{
+	if (enemy->getHitbox().intersects(entity->getBounds()))
 	{
-		player->damage(enemy->getDamage());
+		std::cout << "enemy to player Collision\n";
+		entity->damage(enemy->getDamage());
 
-		sf::FloatRect pbounds = player->getBounds();
-		sf::FloatRect ebounds = enemy->getBounds();
+		this->enemyKnockback(enemy, entity, 40.f);
 
-		float rx = ebounds.left - pbounds.left;
-		float ry = ebounds.top - pbounds.top;
-
-		std::cout << rx << " - " << ry << std::endl;
-		enemy->move(rx, ry);
+		enemy->stun();
+	}
+	for (auto& _enemy : this->enemies_)
+	{
+		if (enemy != _enemy)
+		{
+			if (enemy->getHitbox().intersects(_enemy->getHitbox()))
+				this->enemyKnockback(enemy, _enemy, 10.f);
+		}
 	}
 }
 
@@ -274,7 +283,7 @@ void Level::updateEnemies()
 	*/
 
 	unsigned counter = 0;
-	for (auto& enemy : enemies_)
+	for (auto& enemy : this->enemies_)
 	{
 		enemy->update(this->player_->getPos());
 
@@ -334,7 +343,7 @@ bool Level::bulletCollision(Bullet* bullet, unsigned& counter)
 			> zwrócenie wartości false (kula nie została usunięta)
 	*/
 
-	for (auto& enemy : enemies_)
+	for (auto& enemy : this->enemies_)
 	{
 		if (bullet->getBounds().intersects(enemy->getBounds()))
 		{
@@ -402,7 +411,7 @@ void Level::updateBullets()
 	*/
 
 	unsigned counter = 0;
-	for (auto& bullet : bullets_)
+	for (auto& bullet : this->bullets_)
 	{
 		bullet->update();
 
@@ -429,7 +438,7 @@ void Level::update()
 
 void Level::renderEnemies()
 {
-	for (auto& el : enemies_)
+	for (auto& el : this->enemies_)
 	{
 		el->render(*this->window_);
 	}
@@ -437,7 +446,7 @@ void Level::renderEnemies()
 
 void Level::renderBullets()
 {
-	for (auto& el : bullets_)
+	for (auto& el : this->bullets_)
 	{
 		el->render(*this->window_);
 	}

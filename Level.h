@@ -39,8 +39,6 @@ private:
 	/// INIT FUNCTIONS
 	void initVariables();
 	void initFromFiles(std::string path);
-	void initTextures(std::map<std::string, sf::Texture*>* textures);
-	void initPlayer();
 	void initBackground();
 	void initClock();
 
@@ -64,7 +62,8 @@ public:
 
 	sf::Vector2f randSpawnPosition();
 	void enemySpawning();
-	void enemyCollision(Enemy* enemy, Player* player);
+	void enemyCollision(Enemy* enemy, Entity* entity);
+	void enemyKnockback(Enemy* enemy, Entity* entity, float knockback);
 	void updateEnemies();
 	void deleteEnemy(unsigned& counter);
 
