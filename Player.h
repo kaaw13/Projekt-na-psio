@@ -7,22 +7,34 @@ class Player : public Entity
 {
 private:
 	/// VARIABLES
+	// textures
+	sf::Texture* defaultTexture_;
+	sf::Texture* immunityTexture_;
+
+	// shooting
 	sf::Clock shotClock_;
 	sf::Time shotCooldown_;
 	sf::Time timeSinceLastShot_;
 
+	// immunity
 	bool immunity_;
 	sf::Clock immunityClock_;
 	sf::Time immunityDuration_;
 	sf::Time timeSinceDamaged_;
 
+	// healthbar
+	sf::Vector2f windowSize_;
+	sf::RectangleShape healthbar_;
+	sf::RectangleShape healthbarBack_;
+
 	/// INIT FUNCTIONS
 	void initVariables();
 	void initClocks();
+	void initGui();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Player(sf::Vector2f position, sf::Texture* texture);
+	Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size);
 	virtual ~Player();
 
 	/// GETTERS
@@ -36,6 +48,9 @@ public:
 	/// FUNCTIONS.
 	void moveWasd();
 	void updateImmunity();
+	void updateGui();
+	void renderGui(sf::RenderTarget& target);
+
 	void update();
 };
 

@@ -41,6 +41,7 @@ public:
 	/// SETTERS
 	void move(sf::Vector2f displacement);
 	void setPosition(const float x, const float y);
+	void setTexture(sf::Texture* texture);
 	virtual void damage(unsigned damage);
 	virtual void heal(unsigned heal);
 	void setCurrentHp(unsigned new_hp);
@@ -51,6 +52,5 @@ public:
 	virtual void update() = 0;
 
 	void render(sf::RenderTarget& target);
-
 };
 

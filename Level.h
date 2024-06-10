@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Player.h"
-#include "Enemy.h"
+#include "Boss.h"
 
 #include <fstream>
 #include <vector>
@@ -22,10 +22,10 @@ private:
 
 	// window
 	sf::RenderWindow* window_;
+	sf::Sprite* background_;
 
 	// textures
 	std::map<std::string, sf::Texture*>* textures_ptr;
-	sf::Sprite* background_;
 
 	// player
 	Player* player_;
@@ -33,14 +33,21 @@ private:
 
 	// enemies
 	std::vector<Enemy*> enemies_;
+	Boss* boss_;
+
 	sf::Clock* spawnClock_;
 	sf::Time spawnCooldown_;
 
-	/// INIT FUNCTIONS
+	// waves
+	sf::Clock* waveCooldownClock_;
+	sf::Time waveCooldown_;
+	bool wave_1, wave_2, wave_3, bossFight_;
+
+	/// INIT FUNCTIONS.
 	void initVariables();
 	void initFromFiles(std::string path);
 	void initBackground();
-	void initClock();
+	void initClocks();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
@@ -48,7 +55,7 @@ public:
 	virtual ~Level();
 
 	/// GETTERS
-	const bool allEnemiesKilled() const;
+	const bool bossDefeated() const;
 
 	// inline
 	inline const unsigned getPlayerHp() const { return this->player_->getHp(); };
@@ -61,13 +68,18 @@ public:
 	void playerWindowCollision();
 
 	sf::Vector2f randSpawnPosition();
-	void enemySpawning();
-	void enemyCollision(Enemy* enemy, Entity* entity);
+	void createEnemy();
+	void nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change);
+	void updateWave();
+
+	void enemyCollision(Enemy* enemy);
 	void enemyKnockback(Enemy* enemy, Entity* entity, float knockback);
 	void updateEnemies();
 	void deleteEnemy(unsigned& counter);
 
-	bool bulletCollision(Bullet* bullet, unsigned& counter);
+	void updateBoss();
+
+	bool bulletEnemyCollision(Bullet* bullet, unsigned& counter);
 	bool cullBullet(Bullet* bullet, unsigned& counter);
 	void deleteBullet(unsigned& counter);
 	void updateBullets();

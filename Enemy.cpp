@@ -20,7 +20,7 @@ void Enemy::initClocks()
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned maxHp, unsigned damage)
+Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp)
 	: Entity(position, texture, scale, speed, damage, maxHp)
 {
 	this->initVariables();
@@ -52,6 +52,11 @@ void Enemy::stun()
 	this->timeSinceStunned_ = sf::Time::Zero;
 }
 
+void Enemy::setStunDuration(sf::Time duration)
+{
+	this->stunDuration_ = duration;
+}
+
 ///
 /// FUNCTIONS
 ///
@@ -76,10 +81,11 @@ void Enemy::move(float px, float py)
 	*/
 
 	float Vx, Vy;
+	sf::FloatRect bounds = this->getBounds();
 
 	// 1) wektor przesuniêcia
-	float rx = px - this->getPos().x;
-	float ry = py - this->getPos().y;
+	float rx = px - (bounds.left + bounds.width/2);
+	float ry = py - (bounds.top + bounds.height/2);
 
 	// 2) stosunek Vx/Vy
 	float ratio = rx / ry;

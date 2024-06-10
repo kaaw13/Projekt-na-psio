@@ -20,17 +20,30 @@ void Player::initClocks()
     this->immunityClock_.restart();
 }
 
+void Player::initGui()
+{
+    // healthbar
+    this->healthbar_.setSize(sf::Vector2f(300.f, 25.f));
+    this->healthbar_.setFillColor(sf::Color::Red);
+    this->healthbar_.setPosition(sf::Vector2f(10.f, this->windowSize_.y - 35.f));
+
+    this->healthbarBack_ = this->healthbar_;
+    this->healthbarBack_.setFillColor(sf::Color(25, 25, 25, 200));
+}
+
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 /// 
 
-Player::Player(sf::Vector2f position, sf::Texture* texture)
-    : Entity(position, texture, {0.6f, 0.6f}, 4.f, 5, 10)
+Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size)
+    : Entity(position, default_texture, {0.6f, 0.6f}, 4.f, 5, 100), defaultTexture_(default_texture), immunityTexture_(immunity_texture), windowSize_(window_size)
 {
     /*
         @constructor
 
-        - na liœcie inicjalizacyjnej ustawia texture podan¹ przez game
+        - na liœcie inicjalizacyjnej
+            > wywo³uje konstruktor Entity i przekazuje mu odpowiednie argumenty
+            > ustawia wskaŸniki do textur
         - wywo³uje funkcje init
     */
 
@@ -38,6 +51,7 @@ Player::Player(sf::Vector2f position, sf::Texture* texture)
 
 	this->initVariables();
     this->initClocks();
+    this->initGui();
 }
 
 Player::~Player()
@@ -65,12 +79,24 @@ const float Player::getShootCooldown() const
 
 void Player::damage(unsigned damage)
 {
+    /*
+        @returns void
+
+        if player doesnt have an immunity, damage is dealt and immunity is granted
+        - checking if player has immunity
+        - if not damage is dealt via Entity::damage(...)
+        - immunity is turned on
+        - timeSinceDamaged_ is reset
+        - texture is changed
+    */
+
     if (!immunity_)
     {
         this->Entity::damage(damage);
 
         this->immunity_ = true;
         this->timeSinceDamaged_ = sf::Time::Zero;
+        this->setTexture(immunityTexture_);
     }
 }
 
@@ -79,17 +105,32 @@ void Player::resetTimeSinceLastShot()
     this->timeSinceLastShot_ = sf::Time::Zero;
 }
 
-void Player::updateImmunity()
-{
-    this->timeSinceDamaged_ += this->immunityClock_.restart();
-
-    if (this->timeSinceDamaged_ > this->immunityDuration_)
-        this->immunity_ = false;
-}
-
 ///
 /// FUNCTIONS
 ///
+
+// Updating
+
+void Player::updateImmunity()
+{
+    /*
+        @returns void 
+
+        funkcja liczy czas od ostatniego otrzymania obra¿eñ i wy³¹cza nietykalnoœæ
+        - inkrementacja timeSinceDamaged_
+        - je¿eli wartoœæ ta przekroczy Player::immunityDuration_
+            > nietykalnoœæ jest wy³¹czana
+            > przywracana jest podstawowa tekstura gracza
+    */
+
+    this->timeSinceDamaged_ += this->immunityClock_.restart();
+
+    if (this->timeSinceDamaged_ > this->immunityDuration_)
+    {
+        this->immunity_ = false;
+        this->setTexture(defaultTexture_);
+    }
+}
 
 void Player::moveWasd()
 {
@@ -115,9 +156,26 @@ void Player::moveWasd()
     }
 }
 
+void Player::updateGui()
+{
+    // healthbar
+    float hpPercent = static_cast<float>(this->getHp()) / this->getMaxHp();
+    this->healthbar_.setSize(sf::Vector2f(hpPercent * this->healthbarBack_.getSize().x, this->healthbar_.getSize().y));
+}
+
 void Player::update()
 {
     this->timeSinceLastShot_ += this->shotClock_.restart();
     this->updateImmunity();
     this->moveWasd();
+    this->updateGui();
+}
+
+// Rendering
+
+void Player::renderGui(sf::RenderTarget& target)
+{
+    // healthbar
+    target.draw(this->healthbarBack_);
+    target.draw(this->healthbar_);
 }

@@ -14,10 +14,10 @@ void Entity::initSprite(sf::Vector2f position, sf::Texture* texture, sf::Vector2
 void Entity::initHitBox()
 {
 	this->hitBox_ = this->getBounds();
-	this->hitBox_.width *= 0.8f;
-	this->hitBox_.height *= 0.8f;
-	this->hitBox_.left += hitBox_.width * 0.5f;
-	this->hitBox_.top += hitBox_.height * 0.5f;
+	this->hitBox_.width *= 0.7f;
+	this->hitBox_.height *= 0.7f;
+	this->hitBox_.left += hitBox_.width * 0.2f;
+	this->hitBox_.top += hitBox_.height * 0.2f;
 }
 
 ///
@@ -55,6 +55,11 @@ void Entity::move(sf::Vector2f displacement)
 void Entity::setPosition(const float x, const float y)
 {
 	this->sprite_->setPosition(x, y);
+}
+
+void Entity::setTexture(sf::Texture* texture)
+{
+	this->sprite_->setTexture(*texture);
 }
 
 void Entity::damage(unsigned damage)

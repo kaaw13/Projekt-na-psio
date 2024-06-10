@@ -6,8 +6,6 @@ class Enemy : public Entity
 {
 private:
 	/// VARIABLES
-	sf::FloatRect hitBox_;
-
 	bool isStunned_;
 	sf::Clock stunClock_;
 	sf::Time stunDuration_;
@@ -19,15 +17,15 @@ private:
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned maxHp, unsigned damage);
+	Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp);
 	virtual ~Enemy();
 
 	/// GETTERS
-	// inline
 
 	/// SETTERS
 	void damage(unsigned damage);
 	void stun();
+	void setStunDuration(sf::Time duration);
 
 	/// FUNCTIONS
 	void move(float px, float py);

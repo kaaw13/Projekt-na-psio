@@ -7,6 +7,12 @@
 void Level::initVariables()
 {
 	this->enemyCounter_ = 0;
+	this->wave_1 = true;
+	this->wave_2 = false;
+	this->wave_3 = false;
+	this->bossFight_ = false;
+
+	this->waveCooldown_ = sf::seconds(1.f);
 }
 
 void Level::initFromFiles(std::string path)
@@ -40,6 +46,7 @@ void Level::initFromFiles(std::string path)
 		this->enemyMaxHp_			 = std::stoi(data[3]);
 		this->enemyDamage_			 = std::stoi(data[4]);
 		this->numberOfEnemies_		 = std::stoi(data[5]);
+		this->spawnCooldown_         = sf::seconds(stof(data[6]));
 	}
 	else
 	{
@@ -62,10 +69,10 @@ void Level::initBackground()
 	this->background_->setTexture(*(*textures_ptr)[this->background_texture_key]);
 }
 
-void Level::initClock()
+void Level::initClocks()
 {
-	this->spawnCooldown_ = sf::seconds(1.f);
 	this->spawnClock_ = new sf::Clock;
+	this->waveCooldownClock_ = new sf::Clock;
 }
 
 ///
@@ -88,13 +95,13 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 	std::cout << "new level; path: " << path << "\n";
 
 	this->initFromFiles(path);
+	this->initVariables();
 	this->initBackground();
-	this->initClock();
+	this->initClocks();
 }
 
 Level::~Level()
 {
-	//this->window_
 	for (auto& el : this->enemies_)
 	{
 		delete el;
@@ -103,16 +110,20 @@ Level::~Level()
 	{
 		delete el;
 	}
+	delete this->boss_;
 }
 
 ///
 /// GETTERS
 ///
 
-const bool Level::allEnemiesKilled() const
+const bool Level::bossDefeated() const
 {
-	if ((this->enemyCounter_ == this->numberOfEnemies_) && (this->enemies_.empty()))
+	if (this->bossFight_ && this->boss_->getHp() <= 0)
+	{
+		std::cout << "enemy counter = " << enemyCounter_ << " - enemies_.size() = " << enemies_.size() << std::endl;
 		return true;
+	}
 	else
 		return false;
 }
@@ -204,32 +215,93 @@ sf::Vector2f Level::randSpawnPosition()
 	return sf::Vector2f(x, y);
 }
 
-void Level::enemySpawning()
+void Level::createEnemy()
 {
 	/*
-		@returns void
-
-		funckja tworzy nowego przeciwnika i dodaje do wektora enemies_, raz na czas okreslony w zmiennej spawnCooldow_
-		Do konstruktora klasy enemy przekazuje pozycję spawnu oraz teksturę.
-		- sprawdzenie czy upłynął czas
 		- dodanie przeciwnika, z użyciem funkcji randSpawnPosition() nadającej mu początkową pozycję
 		- restart spawnClock_
 		- pierwszy * to dereferacja wskaźnika prowadząca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wskaźnik do szukanej tekstury, który deferencj(ujemy?) i
 		otrzymujemy już samą teksturę.
-	
 	*/
 
-	if ((this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds()) && (this->enemyCounter_ < this->numberOfEnemies_))
+	this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], { 0.6f, 0.6f }, enemySpeed_, enemyDamage_, enemyMaxHp_));
+	this->spawnClock_->restart();
+	this->enemyCounter_++;
+	std::cout << "enemy number " << enemyCounter_ << std::endl;
+}
+
+void Level::nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change)
+{
+	/*
+		@returns void
+
+		przełącza fale
+	*/
+
+	this->enemyCounter_ = 0;
+	this->numberOfEnemies_ = static_cast<unsigned>(static_cast<float>(numberOfEnemies_) * enemy_amount_change);
+	this->spawnCooldown_ = sf::seconds(this->spawnCooldown_.asSeconds() * spawn_cooldown_change);
+	prev_wave = false;
+	next_wave = true;
+
+	this->waveCooldownClock_->restart();
+}
+
+void Level::updateWave()
+{
+	/*
+		@returns void
+
+		kontroluje etap rozgrywki
+	*/
+
+	if (this->waveCooldownClock_->getElapsedTime().asSeconds() >= this->waveCooldown_.asSeconds())
 	{
-		this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], { 0.6f, 0.6f }, enemySpeed_, enemyMaxHp_, enemyDamage_));
-		this->spawnClock_->restart();
-		this->enemyCounter_++;
-		std::cout << "enemy number " << enemyCounter_ << std::endl;
+		/// FALA 1
+		if (this->wave_1)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// następna fala
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+				this->nextWave(this->wave_1, this->wave_2, 2.f, 0.5f);
+		}
+		/// FALA 2
+		else if (this->wave_2)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// następna fala
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+				this->nextWave(this->wave_2, this->wave_3, 1.f, 0.5f);
+		}
+		/// FALA 3
+		else if (this->wave_3)
+		{
+			// spawn
+			if (this->spawnClock_->getElapsedTime().asSeconds() >= this->spawnCooldown_.asSeconds() && this->enemyCounter_ < this->numberOfEnemies_)
+				this->createEnemy();
+
+			// następna fala - boos fight
+			if (this->enemyCounter_ >= this->numberOfEnemies_)
+			{
+				this->nextWave(this->wave_3, this->bossFight_, 1.f, 0.f);
+				this->boss_ = new Boss({-100.f, -100.f}, (*textures_ptr)[enemy_texture_key], {2.f, 2.f}, 0.7f, 7, 200);
+			}
+		}
 	}
 }
 
 void Level::enemyKnockback(Enemy* enemy, Entity* entity, float knockback)
 {
+	/*
+
+	*/
+
 	float Vx, Vy;
 
 	float rx = entity->getPos().x - enemy->getPos().x;
@@ -244,23 +316,39 @@ void Level::enemyKnockback(Enemy* enemy, Entity* entity, float knockback)
 	enemy->Entity::move(sf::Vector2f(-Vx, -Vy));
 }
 
-void Level::enemyCollision(Enemy* enemy, Entity* entity)
+void Level::enemyCollision(Enemy* enemy)
 {
-	if (enemy->getHitbox().intersects(entity->getBounds()))
+	/*
+		@returns void
+
+		funkcja rozwiązująca kolizje pomiędzy Enemy, a innymi Entity, kolejno
+		- enemy - player
+		- enemy - boss
+		- enemy - enemy
+	*/
+
+	// enemy - player collision
+	if (enemy->getHitbox().intersects(this->player_->getBounds()))
 	{
-		std::cout << "enemy to player Collision\n";
-		entity->damage(enemy->getDamage());
-
-		this->enemyKnockback(enemy, entity, 40.f);
-
+		this->player_->damage(enemy->getDamage());
+		this->enemyKnockback(enemy, this->player_, 40.f);
 		enemy->stun();
-	}
+	} 
+	// enemy - enemy collision
 	for (auto& _enemy : this->enemies_)
 	{
 		if (enemy != _enemy)
 		{
 			if (enemy->getHitbox().intersects(_enemy->getHitbox()))
 				this->enemyKnockback(enemy, _enemy, 10.f);
+		}
+	}
+	// enemy - boss collision
+	if (bossFight_)
+	{
+		if (enemy->getHitbox().intersects(this->boss_->getBounds()))
+		{
+			this->enemyKnockback(enemy, this->boss_, 10.f);
 		}
 	}
 }
@@ -270,6 +358,24 @@ void Level::deleteEnemy(unsigned& counter)
 	delete this->enemies_.at(counter);
 	this->enemies_.erase(this->enemies_.begin() + counter);
 	--counter;
+}
+
+void Level::updateBoss()
+{
+
+	// ruch
+	this->boss_->update(this->player_->getPos());
+
+	// kolizja z graczem
+	if (this->boss_->getHitbox().intersects(this->player_->getBounds()))
+	{
+		this->player_->damage(boss_->getDamage());
+		this->enemyKnockback(boss_, this->player_, 20.f);
+		boss_->stun();
+	}
+
+	// gui
+	this->boss_->updateGui();
 }
 
 void Level::updateEnemies()
@@ -287,15 +393,13 @@ void Level::updateEnemies()
 	{
 		enemy->update(this->player_->getPos());
 
-		this->enemyCollision(enemy, this->player_);
+		this->enemyCollision(enemy);
 
 		if (enemy->getHp() <= 0)
 			this->deleteEnemy(counter);
 
 		++counter;
 	}
-
-	this->enemySpawning();
 }
 
 //			 BULLET RELATED				//
@@ -326,7 +430,7 @@ void Level::shoting()
 	}
 }
 
-bool Level::bulletCollision(Bullet* bullet, unsigned& counter)
+bool Level::bulletEnemyCollision(Bullet* bullet, unsigned& counter)
 {
 	/*
 		@returns bool - czy kula została usunięta?
@@ -415,8 +519,24 @@ void Level::updateBullets()
 	{
 		bullet->update();
 
-		if (!this->bulletCollision(bullet, counter))
-			this->cullBullet(bullet, counter);	
+		bool is_deleted = false;
+
+		// bullet - enemy
+		is_deleted = this->bulletEnemyCollision(bullet, counter);
+		
+		// bullets out of window
+		if(!is_deleted)
+			is_deleted = this->cullBullet(bullet, counter);	
+
+		// bullet - boss
+		if (bossFight_ && !is_deleted)
+		{
+			if (bullet->getBounds().intersects(this->boss_->getHitbox()))
+			{
+				this->boss_->damage(bullet->getDamage());
+				this->deleteBullet(counter);
+			}
+		}
 
 		++counter;
 	}
@@ -432,6 +552,11 @@ void Level::update()
 
 	this->updateBullets();
 	this->updateEnemies();
+
+	if (bossFight_)
+		this->updateBoss();
+
+	this->updateWave();
 }
 
 //			RENDERING			//
@@ -457,6 +582,15 @@ void Level::render()
 	this->window_->draw(*this->background_);
 
 	this->renderBullets();
+
 	this->player_->render(*this->window_);
+	this->player_->renderGui(*this->window_);
+
 	this->renderEnemies();
+
+	if (bossFight_)
+	{
+		this->boss_->render(*this->window_);
+		this->boss_->renderGui(*this->window_);
+	}
 }

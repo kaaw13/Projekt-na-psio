@@ -7,7 +7,7 @@
 void Game::initWindow()
 {
 	//this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "nazwa", sf::Style::Fullscreen);	// okno docelowe
-	this->window_ = new sf::RenderWindow(sf::VideoMode(800, 600), "nazwa", sf::Style::Close);			// okienko tymczasowe do wygodniejszego testowania
+	this->window_ = new sf::RenderWindow(sf::VideoMode(1200, 900), "nazwa", sf::Style::Close);			// okienko tymczasowe do wygodniejszego testowania
 	this->window_->setFramerateLimit(144);
 	this->window_->setVerticalSyncEnabled(false);
 	std::cout << "initWindow\n";
@@ -15,7 +15,8 @@ void Game::initWindow()
 
 void Game::initPlayer()
 {
-	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2), textures_["PLAYER_SHEET"]);
+	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2), 
+							   textures_["PLAYER_SHEET"], textures_["PLAYER_IMMUNITY"], this->window_->getSize());
 }
 
 void Game::initTextures()
@@ -51,12 +52,18 @@ void Game::initTextures()
 	{
 		std::cout << "GAME::INITTEXTURES::Failed to load bullet.png\n";
 	}
+
+	this->textures_["PLAYER_IMMUNITY"] = new sf::Texture;
+	if (!this->textures_["PLAYER_IMMUNITY"]->loadFromFile("Textures/playerImmunity.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load playerImmunity.png\n";
+	}
 }
 
 void Game::initText()
 {
 	this->fonts_.push_back(new sf::Font);	
-	if (this->fonts_[0]->loadFromFile("Fonts/ARCADECLASSIC.ttf"))
+	if (!this->fonts_[0]->loadFromFile("Fonts/ARCADECLASSIC.ttf"))
 	{
 		std::cout << "GAME::INITFONTS::Failed to load ARCADECLASSIC.ttf\n";
 	}
@@ -237,7 +244,7 @@ void Game::updateLevel()
 	this->level_->update();
 
 	// winning
-	if (this->level_->allEnemiesKilled())
+	if (this->level_->bossDefeated())
 	{
 		delete this->level_;
 
