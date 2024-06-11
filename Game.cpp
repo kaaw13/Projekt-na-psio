@@ -15,8 +15,8 @@ void Game::initWindow()
 
 void Game::initPlayer()
 {
-	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2), 
-							   textures_["PLAYER_SHEET"], textures_["PLAYER_IMMUNITY"], this->window_->getSize());
+	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2),
+		textures_["PLAYER_SHEET"], textures_["PLAYER_IMMUNITY"], this->window_->getSize());
 }
 
 void Game::initTextures()
@@ -52,7 +52,6 @@ void Game::initTextures()
 	{
 		std::cout << "GAME::INITTEXTURES::Failed to load bullet.png\n";
 	}
-
 	this->textures_["PLAYER_IMMUNITY"] = new sf::Texture;
 	if (!this->textures_["PLAYER_IMMUNITY"]->loadFromFile("Textures/playerImmunity.png"))
 	{
@@ -71,7 +70,36 @@ void Game::initText()
 	this->menuTexts_.push_back(new sf::Text("Balls of death", *this->fonts_[0], 44));
 	this->menuTexts_[0]->setFillColor(sf::Color::White);
 	this->menuTexts_[0]->setPosition(sf::Vector2f(50.f, 10.f));
+	this->menuTexts_.push_back(new sf::Text("Enter your nick:", *this->fonts_[0], 44));
+	this->menuTexts_[1]->setFillColor(sf::Color::White);
+	this->menuTexts_[1]->setPosition(sf::Vector2f(50.f, 50.f));
+	this->menuTexts_.push_back(new sf::Text("", *this->fonts_[0], 44));
+	this->menuTexts_[2]->setFillColor(sf::Color::White);
+	this->menuTexts_[2]->setPosition(sf::Vector2f(500.f, 50.f));
+	this->menuTexts_.push_back(new sf::Text("Level 1", *this->fonts_[0], 44));
+	this->menuTexts_[3]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[3]->setPosition(sf::Vector2f(150.f, 250.f));
+	this->menuTexts_.push_back(new sf::Text("Level 2", *this->fonts_[0], 44));
+	this->menuTexts_[4]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[4]->setPosition(sf::Vector2f(350.f, 250.f));
+	this->menuTexts_.push_back(new sf::Text("Level 3", *this->fonts_[0], 44));
+	this->menuTexts_[5]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[5]->setPosition(sf::Vector2f(550.f, 250.f));
+	this->menuTexts_.push_back(new sf::Text("Exit", *this->fonts_[0], 44));
+	this->menuTexts_[6]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[6]->setPosition(sf::Vector2f(150.f, 450.f));
+	this->menuTexts_.push_back(new sf::Text("Wyniki", *this->fonts_[0], 44));
+	this->menuTexts_[7]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[7]->setPosition(sf::Vector2f(350.f, 450.f));
+	this->menuTexts_.push_back(new sf::Text("Twój nick", *this->fonts_[0], 44));
+	this->menuTexts_[8]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[8]->setPosition(sf::Vector2f(550.f, 450.f));
+	this->menuTexts_.push_back(new sf::Text("", *this->fonts_[0], 44));
+	this->menuTexts_[9]->setFillColor(sf::Color::Magenta);
+	this->menuTexts_[9]->setPosition(sf::Vector2f(750.f, 450.f));
+	
 }
+
 
 void Game::initButtons()
 {
@@ -86,6 +114,14 @@ void Game::initButtons()
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
 	this->buttons_[2]->setPosition(sf::Vector2f(500.f, 200.f));
 	this->buttons_[2]->setFillColor(sf::Color::White);
+
+	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
+	this->buttons_[3]->setPosition(sf::Vector2f(100.f, 400.f));
+	this->buttons_[3]->setFillColor(sf::Color::Blue);
+
+	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
+	this->buttons_[4]->setPosition(sf::Vector2f(300.f, 400.f));
+	this->buttons_[4]->setFillColor(sf::Color::Yellow);
 }
 
 void Game::initMenu()
@@ -103,6 +139,63 @@ void Game::initMenu()
 	this->initText();
 	this->initButtons();
 }
+
+//zapisywanie nicku
+void Game::saveNickname(const std::string& filename, const std::string& nick, int wynik)
+{
+	std::ofstream file;
+	file.open(filename, std::ios::app);
+
+	if (file.is_open()) {
+		file << nick << " " << wynik << "\n";
+		file.close();
+		std::cout << "Zapisano do pliku tekstowego.\n";
+	}
+	else {
+		std::cerr << "Nie mo¿na otworzyæ pliku: " << filename << "\n";
+		perror("B³¹d");
+	}
+}
+
+int Game::findNickname(const std::string& filename, const std::string& nick) {
+	std::ifstream file(filename);
+	std::string line;
+	bool found = false;
+
+	if (file.is_open()) {
+		while (std::getline(file, line)) {
+			size_t spacePos = line.find(' ');
+			currentNickname_ = line.substr(0, spacePos);
+			try {
+				playerScore_ = std::stoi(line.substr(spacePos + 1));
+			}
+			catch (const std::invalid_argument& e) {
+				// Obs³uga wyj¹tku std::invalid_argument
+				std::cerr << "Nieprawid³owy format liczby: " << e.what() << std::endl;
+				playerScore_ = 0; // Ustawienie wartoœci domyœlnej
+			}
+
+			if (currentNickname_ == nick) {
+				std::cout << "Znaleziono nick: " << nick << "\n";
+				found = true;
+				return 1;
+			}
+		}
+		file.close();
+		if (!found) {
+			std::cout << "Gracz o nicku " << nick << " nie znaleziony.\n";
+			return 0;
+		}
+	}
+	else {
+		std::cerr << "Nie mo¿na otworzyæ pliku.\n";
+	}
+
+	return -1; // Dodane dla pe³noœci, aby upewniæ siê, ¿e funkcja zawsze zwraca wartoœæ
+}
+
+
+
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
@@ -164,8 +257,10 @@ void Game::run()
 
 		this->update();
 		this->render();
+		//this->enterNickname();
 	}
 }
+
 
 void Game::updatePollEvents()
 {
@@ -182,6 +277,26 @@ void Game::updatePollEvents()
 		{
 			this->window_->close();
 		}
+		if (this->e.type == sf::Event::TextEntered && enteringNickname_ ==true )
+		{
+			if (this->e.text.unicode < 128)
+			{
+				this->text_ += static_cast<char>(this->e.text.unicode);
+				this->menuTexts_[2]->setString(this->text_);
+			}
+			
+		}
+		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace) )
+		{
+			if (!this->text_.empty())
+			{
+				this->text_.pop_back();
+				this->menuTexts_[2]->setString(this->text_);
+				
+			}
+		}
+		
+		
 	}
 }
 
@@ -219,7 +334,63 @@ void Game::updateMenu()
 			this->isMenu_ = false;
 			this->level_ = new Level(this->player_, this->window_, &this->textures_, "Level/Level3.txt");
 		}
+		else if (this->buttons_[3]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		{
+			// wyjœcie
+			this->window_->close();
+		}
+		else if (this->buttons_[4]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+		{
+			
+			enteringNickname_ = true;
+			
+			
+		}
 	}
+	//wczytywanie nicku
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+	{
+		this->playerNickname_ = text_;
+		this->menuTexts_[2]->setString(this->playerNickname_);
+		int wyniki = 0;
+		switch (this->findNickname("Nickname/wyniki.txt", this->playerNickname_))
+		{
+		case 0: // Nick nie zosta³ znaleziony
+			this->saveNickname("Nickname/wyniki.txt", this->playerNickname_, wyniki);
+			break;
+		case 1: // Nick zosta³ znaleziony
+			this->findNickname("Nickname/wyniki.txt", this->playerNickname_);
+			break;
+		default:
+			
+			break;
+		}
+		this->menuTexts_[9]->setString(this->playerNickname_ + " " + std::to_string(playerScore_));
+		this->enteringNickname_ = false;
+		
+	}
+	//obsluga backspace
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace) && this->backspaceKeyReleased_)
+	{
+		if (!this->text_.empty())
+		{
+			this->text_.pop_back();
+			this->menuTexts_[2]->setString(this->text_);
+		}
+		this->backspaceKeyReleased_ = false;
+	}
+	else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace))
+	{
+		this->backspaceKeyReleased_ = true;
+	}
+	//obsluga enter
+
+	
+	
+	
+	
+
 }
 
 void Game::updateLevel()
