@@ -409,6 +409,10 @@ void Game::updateMenu()
 		else if (this->buttons_[3]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
 			// wyjscie
+			if(this->playerNickname_ != "")
+			{ 
+			this->findNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->getLevel(), this->player_->getCurrentExp());
+			}
 			this->window_->close();
 		}
 	
@@ -437,7 +441,7 @@ void Game::updateMenu()
 		}
 		else
 		{
-			this->findNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->getLevel(), this->player_->getCurrentExp());
+			this->findNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->level_, this->player_->currentExperience_);
 			std::cout << "Znaleziono nick: " << this->playerNickname_ << "\n";
 		}
 		//switch (this->findNickname("Nickname/wyniki.txt", this->playerNickname_,1, 0))
