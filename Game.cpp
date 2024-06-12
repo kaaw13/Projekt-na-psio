@@ -122,8 +122,27 @@ void Game::initButtons()
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
 	this->buttons_[4]->setPosition(sf::Vector2f(300.f, 400.f));
 	this->buttons_[4]->setFillColor(sf::Color::Yellow);
+
+	
 }
 
+void Game::initpauseMenu()
+{
+	sf::Text pauseText;
+	pauseText.setFont(*this->fonts_[0]);
+	pauseText.setString("Pauza");
+	pauseText.setCharacterSize(72);
+	pauseText.setFillColor(sf::Color::Red);
+	pauseText.setPosition(this->window_->getSize().x / 2 - pauseText.getGlobalBounds().width / 2,
+		this->window_->getSize().y / 2 - pauseText.getGlobalBounds().height / 2);
+	this->window_->draw(pauseText);
+	this->menuButton_ = new sf::RectangleShape(sf::Vector2f(200.f, 50.f));
+	this->menuButton_->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - 100.f, this->window_->getSize().y / 2 + 100.f));
+	this->menuButton_->setFillColor(sf::Color::Green);
+	
+	
+	
+}
 void Game::initMenu()
 {
 	/*
@@ -138,6 +157,8 @@ void Game::initMenu()
 	this->isMenu_ = true;
 	this->initText();
 	this->initButtons();
+	
+	
 }
 
 //zapisywanie nicku
@@ -231,7 +252,7 @@ Game::~Game()
 	{
 		delete el;
 	}
-
+	delete this->menuButton_;
 	delete this->window_;
 }
 
@@ -255,7 +276,10 @@ void Game::run()
 	{
 		this->updatePollEvents();
 
-		this->update();
+		if (!pause_.isPaused()) {
+			this->update();
+		}
+
 		this->render();
 		//this->enterNickname();
 	}
@@ -273,9 +297,15 @@ void Game::updatePollEvents()
 
 	while (this->window_->pollEvent(this->e))
 	{
-		if (this->e.type == sf::Event::KeyPressed && this->e.key.code == sf::Keyboard::Escape)
+		//powracanie do menu
+		if (this->e.type == sf::Event::KeyPressed && this->e.key.code == sf::Keyboard::Escape && isMenu_==false)
 		{
-			this->window_->close();
+			if (pause_.isPaused()) {
+				pause_.resume();
+			}
+			else {
+				pause_.pause();
+			}
 		}
 		if (this->e.type == sf::Event::TextEntered && enteringNickname_ ==true )
 		{
@@ -293,6 +323,19 @@ void Game::updatePollEvents()
 				this->text_.pop_back();
 				this->menuTexts_[2]->setString(this->text_);
 				
+			}
+		}
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+			if (this->menuButton_ != nullptr && this->menuButton_->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+			{
+				// Your code here
+
+				if (this->menuButton_->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
+				{
+					// Przejœcie do menu
+					this->isMenu_ = true;
+					pause_.resume();
+				}
 			}
 		}
 		
@@ -336,9 +379,10 @@ void Game::updateMenu()
 		}
 		else if (this->buttons_[3]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
-			// wyjœcie
+			// wyjscie
 			this->window_->close();
 		}
+	
 		else if (this->buttons_[4]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 		{
 			
@@ -346,6 +390,8 @@ void Game::updateMenu()
 			
 			
 		}
+		
+		 
 	}
 	//wczytywanie nicku
 
@@ -490,6 +536,14 @@ void Game::render()
 		this->renderMenu();
 	else
 		this->level_->render();
+	//pauza
+	if (pause_.isPaused())
+	{
+		
+		this->initpauseMenu();
+		this->window_->draw(*this->menuButton_);
+		
+	}
 
 	// Displaying
 	this->window_->display();

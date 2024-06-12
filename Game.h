@@ -4,7 +4,7 @@
 #include "Bullet.h"
 #include "Enemy.h"
 #include "Level.h"
-
+#include "Pause.h"
 #include <map>
 
 class Game
@@ -23,6 +23,11 @@ private:
 	bool backspaceKeyReleased_;
 	bool enterKeyPressed_;
 	bool enteringNickname_;
+	//Pauza
+	Pause pause_;
+	sf::RectangleShape* menuButton_;
+
+
 	// resources
 	std::map<std::string, sf::Texture*> textures_;
 	std::vector<sf::Font*> fonts_;
@@ -43,6 +48,7 @@ private:
 	void initTextures();
 	void initPlayer();
 
+	void initpauseMenu();
 	void initButtons();
 	void initText();
 	void initMenu();
