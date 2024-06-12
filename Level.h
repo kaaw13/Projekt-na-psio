@@ -39,6 +39,7 @@ private:
 	// window
 	sf::RenderWindow* window_;
 	sf::Sprite* background_;
+	sf::Font* font_;
 
 	// textures
 	std::map<std::string, sf::Texture*>* textures_ptr;
@@ -63,16 +64,18 @@ private:
 	sf::Clock* waveCooldownClock_;
 	sf::Time waveCooldown_;
 	bool wave_1, wave_2, wave_3, bossFight_;
+	sf::Text waveText_;
 
 	/// INIT FUNCTIONS.
 	void initVariables();
 	void initFromFiles(std::string path);
 	void initBackground();
 	void initClocks();
+	void initText();
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path);
+	Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path, sf::Font* font);
 	virtual ~Level();
 
 	/// GETTERS

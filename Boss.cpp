@@ -14,7 +14,7 @@ void Boss::initGui()
 	// healthbar
 	this->healthbar_.setSize(sf::Vector2f(this->getBounds().width, 15.f));
 	this->healthbar_.setFillColor(sf::Color::Red);
-	this->healthbar_.setPosition(this->getPos());
+	this->healthbar_.setPosition(this->getPos().x, this->getPos().y - 20);
 
 	this->healthbarBack_ = this->healthbar_;
 	this->healthbarBack_.setFillColor(sf::Color(25, 25, 25, 200));

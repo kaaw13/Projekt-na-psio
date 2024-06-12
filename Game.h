@@ -27,21 +27,22 @@ private:
 
 	//Pauza
 	Pause pause_;
-	sf::RectangleShape* menuButton_;
-
+	sf::RectangleShape* pauseButton_;
+	sf::Text pauseText_;
 
 	// resources
 	std::map<std::string, sf::Texture*> textures_;
 	std::vector<sf::Font*> fonts_;
-
-	//nickname
-	std::string text_;
-	std::string currentNickname_;
-	std::string playerNickname_;
-	
-	
+		
 	// player
 	Player* player_;
+	std::string playerNickname_;
+
+	// file
+	int levelFromFile_;
+	int expFromFile_;
+	bool playerFound_;
+	std::vector<std::string> fileTextLines_;
 
 	// level
 	Level* level_;
@@ -50,14 +51,18 @@ private:
 	void initWindow();
 	void initTextures();
 	void initPlayer();
+	void initVariables();
 
 	void initpauseMenu();
 	void initButtons();
 	void initText();
 	void initMenu();
-	void saveNickname(const std::string& filename, const std::string& nick,unsigned poziom,unsigned xp );
-	void enterNickname(const std::string& filename, unsigned poziom, unsigned xp);
-	int findNickname(const std::string& filename, const std::string& nick, unsigned poziom, unsigned xp);
+
+	//void saveNickname(const std::string& filename, const std::string& nick,unsigned poziom, unsigned xp);
+	//int findNickname(const std::string& filename);
+	int findNickname(const std::string& filename);
+	void inputFromFile(const std::string& filename);
+	void saveNickname(const std::string& filename);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS

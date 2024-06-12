@@ -87,12 +87,21 @@ void Level::initClocks()
 	this->waveCooldownClock_ = new sf::Clock;
 }
 
+void Level::initText()
+{
+	this->waveText_.setFont(*this->font_);
+	this->waveText_.setCharacterSize(50);
+	this->waveText_.setString("WAVE 1!");
+	this->waveText_.setPosition(sf::Vector2f(this->window_->getSize().x/2 - this->waveText_.getGlobalBounds().width/2, 200.f));
+	this->waveText_.setFillColor(sf::Color::Black);
+}
+
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path)
-	: player_(player), window_(window), textures_ptr(textures)
+Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path, sf::Font* font)
+	: player_(player), window_(window), textures_ptr(textures), font_(font)
 {
 	/*
 		@constructor
@@ -110,6 +119,7 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 	this->initVariables();
 	this->initBackground();
 	this->initClocks();
+	this->initText();
 }
 
 Level::~Level()
@@ -282,7 +292,10 @@ void Level::updateWave()
 
 			// następna fala
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
-				this->nextWave(this->wave_1, this->wave_2, 2.f, 0.5f);
+			{
+				this->nextWave(this->wave_1, this->wave_2, 1.5f, 0.8f);
+				this->waveText_.setString("Wave 2!");
+			}
 		}
 		/// FALA 2
 		else if (this->wave_2)
@@ -293,7 +306,10 @@ void Level::updateWave()
 
 			// następna fala
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
-				this->nextWave(this->wave_2, this->wave_3, 1.f, 0.5f);
+			{
+				this->nextWave(this->wave_2, this->wave_3, 1.5f, 0.8f);
+				this->waveText_.setString("Wave 3!");
+			}
 		}
 		/// FALA 3
 		else if (this->wave_3)
@@ -305,6 +321,7 @@ void Level::updateWave()
 			// następna fala - boos fight
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
 			{
+				this->waveText_.setString("Bossfight!");
 				this->nextWave(this->wave_3, this->bossFight_, 1.f, 0.f);
 				this->boss_ = new Boss({ -100.f, -100.f }, (*textures_ptr)[boss_texture_key], bossScale_, bossSpeed_, bossDamage_, bossMaxHp_, bossStun_);
 			}
@@ -400,7 +417,7 @@ void Level::createDrop(sf::Vector2f position)
 		- lub stworzenie dropu typu medkit
 	*/
 
-	if (rand() % 100 < 50)
+	if (rand() % 100 < 90)
 	{
 		// create exp drop
 		this->drops_.push_back(new Drop(position, (*textures_ptr)["EXP_DROP"], sf::Vector2f(0.1f, 0.1f), DROP_TYPE::EXP, this->dropExp_));
@@ -422,12 +439,8 @@ void Level::updateDropCollision()
 		{
 			drop->collide(this->player_);
 
-			std::cout << "drop collided at: " << counter << std::endl;
-
 			delete this->drops_.at(counter);
 			this->drops_.erase(this->drops_.begin() + counter);
-			
-			std::cout << "drop deleted at: " << counter << std::endl;
 
 			--counter;
 		}
@@ -497,8 +510,10 @@ void Level::shoting()
 		if (this->player_->getTimeSinceLastShoot() >= this->player_->getShootCooldown())
 		{
 			sf::Vector2f mouse_pos = { static_cast<float>(sf::Mouse::getPosition(*this->window_).x), static_cast<float>(sf::Mouse::getPosition(*this->window_).y) };
+			sf::Vector2f origin = sf::Vector2f(this->player_->getPos().x + this->player_->getBounds().width/2 - 18, 
+											   this->player_->getPos().y + this->player_->getBounds().height/2 - 18);
 
-			this->bullets_.push_back(new Bullet(this->player_->getPos(), mouse_pos, (*textures_ptr)["BULLET"], this->player_->getDamage()));
+			this->bullets_.push_back(new Bullet(origin, mouse_pos, (*textures_ptr)["BULLET"], this->player_->getDamage()));
 			
 			this->player_->resetTimeSinceLastShot();
 		}
@@ -670,13 +685,19 @@ void Level::render()
 	this->renderBullets();
 
 	this->player_->render(*this->window_);
-	this->player_->renderGui(*this->window_);
 
 	this->renderEnemies();
+
+	this->player_->renderGui(*this->window_);
 
 	if (bossFight_)
 	{
 		this->boss_->render(*this->window_);
 		this->boss_->renderGui(*this->window_);
+	}
+
+	if (this->waveCooldownClock_->getElapsedTime().asSeconds() <= this->waveCooldown_.asSeconds())
+	{
+		this->window_->draw(this->waveText_);
 	}
 }

@@ -7,14 +7,9 @@
 void Player::initVariables()
 {
     this->shotCooldown_ = sf::seconds(0.7f);
-    this->immunityDuration_ = sf::seconds(2.f);
+    this->immunityDuration_ = sf::seconds(1.2f);
     this->immunity_ = false;
-
-    this->currentExperience_ = 0;
     this->expForLevelup_ = 10;
-    this->level_ = 1;
-   
-    
 }
 
 void Player::initClocks()
@@ -29,7 +24,7 @@ void Player::initClocks()
 void Player::initGui()
 {
     // healthbar
-    this->healthbar_.setSize(sf::Vector2f(500.f, 25.f));
+    this->healthbar_.setSize(sf::Vector2f(500.f, 30.f));
     this->healthbar_.setFillColor(sf::Color::Red);
     this->healthbar_.setPosition(sf::Vector2f(30.f, this->windowSize_.y - 45.f));
 
@@ -37,20 +32,27 @@ void Player::initGui()
     this->healthbarBack_.setFillColor(sf::Color(25, 25, 25, 200));
 
     // experience bar
-    this->expBar_.setSize(sf::Vector2f(500.f, 25.f));
+    this->expBar_.setSize(sf::Vector2f(this->windowSize_.x - 60, 20.f));
     this->expBar_.setFillColor(sf::Color::Green);
     this->expBar_.setPosition(sf::Vector2f(sf::Vector2f(30.f, 30.f)));
 
     this->expBarBack_ = this->expBar_;
     this->expBarBack_.setFillColor(sf::Color(25, 25, 25, 200));
+
+    this->levelText_.setFont(*this->font_);
+    this->levelText_.setCharacterSize(12);
+    this->levelText_.setString("Level " + std::to_string(level_) + "  \\\\  " + std::to_string(currentExperience_) + "/" + std::to_string(expForLevelup_));
+    this->levelText_.setPosition(sf::Vector2f(this->windowSize_.x / 2 - this->levelText_.getGlobalBounds().width / 2, 35.f));
+    this->levelText_.setFillColor(sf::Color::White);
 }
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 /// 
 
-Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size)
-    : Entity(position, default_texture, {0.6f, 0.6f}, 4.f, 5, 100), defaultTexture_(default_texture), immunityTexture_(immunity_texture), windowSize_(window_size)
+Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture* immunity_texture, sf::Vector2u window_size, sf::Font* font, int level, int exp)
+    : Entity(position, default_texture, {0.6f, 0.6f}, 3.f, 5, 100), defaultTexture_(default_texture), 
+      immunityTexture_(immunity_texture), windowSize_(window_size), font_(font), level_(level), currentExperience_(exp)
 {
     /*
         @constructor
@@ -66,12 +68,12 @@ Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture*
 	this->initVariables();
     this->initClocks();
     this->initGui();
+    this->initialLevelUp();
 }
 
 Player::~Player()
 {
-   
-   
+
 }
 
 ///
@@ -124,6 +126,19 @@ void Player::addExp(unsigned exp)
 {
     this->currentExperience_ += exp;
     this->updateLevel();
+}
+
+void Player::initialLevelUp()
+{
+    for (int i = 1; i < level_; ++i)
+    {
+        this->expForLevelup_ *= 1.2;
+        this->setMaxHp(this->getMaxHp() + 15);
+        this->setCurrentHp(this->getHp() + 15);
+        this->setDamage(this->getDamage() + 1);
+        this->setSpeed(this->getSpeed() + 0.2f);
+        this->shotCooldown_ *= 0.9f;
+    }
 }
 
 ///
@@ -186,6 +201,7 @@ void Player::updateGui()
     // experience bar
     float expPercent = static_cast<float>(this->currentExperience_) / static_cast<float>(this->expForLevelup_);
     this->expBar_.setSize(sf::Vector2f(expPercent * this->expBarBack_.getSize().x, this->expBar_.getSize().y));
+
 }
 
 void Player::updateLevel()
@@ -193,14 +209,25 @@ void Player::updateLevel()
     /*
         @returns void
 
-        funckja wywo³ywana przy zebraniu doœwiadczenia, sprawdza czy wystarczy³o go do level-upu i podwy¿sza poziom gracza
+        funckja wywo³ywana przy zebraniu doœwiadczenia, sprawdza czy wystarczy³o go do level-upu i podwy¿sza poziom gracza oraz jego statystyki
     */
+
+    this->levelText_.setString("Level " + std::to_string(level_) + "  \\\\  " + std::to_string(currentExperience_) + "/" + std::to_string(expForLevelup_));
 
     if (this->currentExperience_ >= this->expForLevelup_)
     {
         this->level_++;
-        this->currentExperience_ = 0;
         this->expForLevelup_ *= 1.2;
+        this->currentExperience_ = 0;
+
+        this->levelText_.setString("Level " + std::to_string(level_) + "  \\\\  " + std::to_string(currentExperience_) + "/" + std::to_string(expForLevelup_));
+
+        // stat upgrades
+        this->setMaxHp(this->getMaxHp() + 15);
+        this->setCurrentHp(this->getHp() + 15);
+        this->setDamage(this->getDamage() + 1);
+        this->setSpeed(this->getSpeed() + 0.2f);
+        this->shotCooldown_ *= 0.9f;
     }
 }
 
@@ -223,5 +250,7 @@ void Player::renderGui(sf::RenderTarget& target)
     // experience bar
     target.draw(this->expBarBack_);
     target.draw(this->expBar_);
+
+    target.draw(this->levelText_);
 }
 

@@ -22,7 +22,7 @@ void Bullet::initVariables(sf::Vector2f player_pos, sf::Vector2f mouse_pos)
 		6) zainicjalizowanie wektora displacement
 	*/
 
-	this->movementSpeed_ = 5.f;
+	this->movementSpeed_ = 8.f;
 	float Vx, Vy;
 
 	// 1) przesuniêcie
