@@ -65,8 +65,11 @@ void Entity::setTexture(sf::Texture* texture)
 void Entity::damage(unsigned damage)
 {
 	this->hp_ -= damage;
-	if (this->hp_ < 0)
+
+	if (this->hp_ <= 0)
+	{
 		this->hp_ = 0;
+	}
 }
 
 void Entity::heal(unsigned heal)
@@ -87,12 +90,20 @@ void Entity::setMaxHp(unsigned new_max_hp)
 	this->maxHp_ = new_max_hp;
 }
 
-void Entity::changeDamage(int amount)
+void Entity::setDamage(int new_damage)
 {
-	this->damage_ += amount;
+	this->damage_ = new_damage;
 
 	if (this->damage_ < 1)
 		this->damage_ = 1;
+}
+
+void Entity::setSpeed(float new_speed)
+{
+	this->movementSpeed_ = new_speed;
+
+	if (this->damage_ < 0.5f)
+		this->damage_ = 0.5f;
 }
 
 ///

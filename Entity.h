@@ -16,7 +16,7 @@ private:
 	float movementSpeed_;
 	unsigned damage_;
 	unsigned maxHp_;
-	unsigned hp_;
+	int hp_;
 
 	// INIT FUNCTIONS
 	virtual void initVariables() = 0;
@@ -46,7 +46,8 @@ public:
 	virtual void heal(unsigned heal);
 	void setCurrentHp(unsigned new_hp);
 	void setMaxHp(unsigned new_max_hp);
-	void changeDamage(int amount);
+	void setDamage(int new_damage);
+	void setSpeed(float new_speed);
 
 	/// FUNCTIONS
 	virtual void update() = 0;

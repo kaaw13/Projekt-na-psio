@@ -11,8 +11,6 @@ void Level::initVariables()
 	this->wave_2 = false;
 	this->wave_3 = false;
 	this->bossFight_ = false;
-
-	this->waveCooldown_ = sf::seconds(1.f);
 }
 
 void Level::initFromFiles(std::string path)
@@ -41,12 +39,26 @@ void Level::initFromFiles(std::string path)
 		}
 
 		this->background_texture_key = data[0];
-		this->enemy_texture_key		 = data[1];
-		this->enemySpeed_			 = std::stof(data[2]);
-		this->enemyMaxHp_			 = std::stoi(data[3]);
-		this->enemyDamage_			 = std::stoi(data[4]);
-		this->numberOfEnemies_		 = std::stoi(data[5]);
-		this->spawnCooldown_         = sf::seconds(stof(data[6]));
+		this->waveCooldown_			 = sf::seconds(std::stof(data[1]));
+
+		this->enemy_texture_key		 = data[2];
+		this->enemySpeed_			 = std::stof(data[3]);
+		this->enemyMaxHp_			 = std::stoi(data[4]);
+		this->enemyDamage_			 = std::stoi(data[5]);
+		this->numberOfEnemies_		 = std::stoi(data[6]);
+		this->spawnCooldown_         = sf::seconds(std::stof(data[7]));
+		this->enemyScale_			 = { std::stof(data[8]), std::stof(data[8]) };
+		this->enemyStun_			 = sf::seconds(std::stof(data[9]));
+
+		this->boss_texture_key		 = data[10];
+		this->bossSpeed_			 = std::stof(data[11]);
+		this->bossMaxHp_			 = std::stoi(data[12]);
+		this->bossDamage_			 = std::stoi(data[13]);
+		this->bossScale_			 = { std::stof(data[14]), std::stof(data[14]) };
+		this->bossStun_				 = sf::seconds(std::stof(data[15]));
+
+		this->dropExp_				 = std::stoi(data[16]);
+		this->dropHeal_				 = std::stoi(data[17]);
 	}
 	else
 	{
@@ -75,12 +87,21 @@ void Level::initClocks()
 	this->waveCooldownClock_ = new sf::Clock;
 }
 
+void Level::initText()
+{
+	this->waveText_.setFont(*this->font_);
+	this->waveText_.setCharacterSize(50);
+	this->waveText_.setString("WAVE 1!");
+	this->waveText_.setPosition(sf::Vector2f(this->window_->getSize().x/2 - this->waveText_.getGlobalBounds().width/2, 200.f));
+	this->waveText_.setFillColor(sf::Color::Black);
+}
+
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path)
-	: player_(player), window_(window), textures_ptr(textures)
+Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf::Texture*>* textures, std::string path, sf::Font* font)
+	: player_(player), window_(window), textures_ptr(textures), font_(font)
 {
 	/*
 		@constructor
@@ -98,6 +119,7 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 	this->initVariables();
 	this->initBackground();
 	this->initClocks();
+	this->initText();
 }
 
 Level::~Level()
@@ -107,6 +129,10 @@ Level::~Level()
 		delete el;
 	}
 	for (auto& el : this->bullets_)
+	{
+		delete el;
+	}
+	for (auto& el : this->drops_)
 	{
 		delete el;
 	}
@@ -224,7 +250,7 @@ void Level::createEnemy()
 		otrzymujemy już samą teksturę.
 	*/
 
-	this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], { 0.6f, 0.6f }, enemySpeed_, enemyDamage_, enemyMaxHp_));
+	this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], enemyScale_, enemySpeed_, enemyDamage_, enemyMaxHp_, enemyStun_));
 	this->spawnClock_->restart();
 	this->enemyCounter_++;
 	std::cout << "enemy number " << enemyCounter_ << std::endl;
@@ -266,7 +292,10 @@ void Level::updateWave()
 
 			// następna fala
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
-				this->nextWave(this->wave_1, this->wave_2, 2.f, 0.5f);
+			{
+				this->nextWave(this->wave_1, this->wave_2, 1.5f, 0.8f);
+				this->waveText_.setString("Wave 2!");
+			}
 		}
 		/// FALA 2
 		else if (this->wave_2)
@@ -277,7 +306,10 @@ void Level::updateWave()
 
 			// następna fala
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
-				this->nextWave(this->wave_2, this->wave_3, 1.f, 0.5f);
+			{
+				this->nextWave(this->wave_2, this->wave_3, 1.5f, 0.8f);
+				this->waveText_.setString("Wave 3!");
+			}
 		}
 		/// FALA 3
 		else if (this->wave_3)
@@ -289,8 +321,9 @@ void Level::updateWave()
 			// następna fala - boos fight
 			if (this->enemyCounter_ >= this->numberOfEnemies_)
 			{
+				this->waveText_.setString("Bossfight!");
 				this->nextWave(this->wave_3, this->bossFight_, 1.f, 0.f);
-				this->boss_ = new Boss({-100.f, -100.f}, (*textures_ptr)[enemy_texture_key], {2.f, 2.f}, 0.7f, 7, 200);
+				this->boss_ = new Boss({ -100.f, -100.f }, (*textures_ptr)[boss_texture_key], bossScale_, bossSpeed_, bossDamage_, bossMaxHp_, bossStun_);
 			}
 		}
 	}
@@ -355,9 +388,64 @@ void Level::enemyCollision(Enemy* enemy)
 
 void Level::deleteEnemy(unsigned& counter)
 {
+	/*
+		@returns void 
+
+		funkcja tworzy drop z pokonanego stwora, 
+		a następnie usuwa go oraz wskaźnik do niego z wektora Level::enemies_
+		- wywołanie funckji tworzącej drop w miejscu potwora
+		- usunięcie obiektu typu Enemy spod adresu ze wskaźnika
+		- usunięcie wskaźnika
+		- zmniejszenie Level::updateEnemies()::counter, aby prawidłowo kontynuować pętle for
+	*/
+
+	this->createDrop(this->enemies_.at(counter)->getPos());
+
 	delete this->enemies_.at(counter);
 	this->enemies_.erase(this->enemies_.begin() + counter);
 	--counter;
+}
+
+void Level::createDrop(sf::Vector2f position)
+{
+	/*
+		@returns void
+
+		po wywołaniu, funkcja losowo tworzy Drop, a następnie dodaje go do wektora Level::drops_
+		- wylosowanie z prawdopodobieństwem ustalonym w warurnku if
+		- stworzenie dropu typu experience
+		- lub stworzenie dropu typu medkit
+	*/
+
+	if (rand() % 100 < 90)
+	{
+		// create exp drop
+		this->drops_.push_back(new Drop(position, (*textures_ptr)["EXP_DROP"], sf::Vector2f(0.1f, 0.1f), DROP_TYPE::EXP, this->dropExp_));
+	}
+	else
+	{
+		// create medkit
+		this->drops_.push_back(new Drop(position, (*textures_ptr)["MEDKIT"], sf::Vector2f(0.1f, 0.1f), DROP_TYPE::MEDKIT, this->dropHeal_));
+	}
+}
+
+void Level::updateDropCollision()
+{
+
+	unsigned counter = 0;
+	for (auto& drop : drops_)
+	{
+		if (drop->getBounds().intersects(this->player_->getBounds()))
+		{
+			drop->collide(this->player_);
+
+			delete this->drops_.at(counter);
+			this->drops_.erase(this->drops_.begin() + counter);
+
+			--counter;
+		}
+		++counter;
+	}
 }
 
 void Level::updateBoss()
@@ -422,8 +510,10 @@ void Level::shoting()
 		if (this->player_->getTimeSinceLastShoot() >= this->player_->getShootCooldown())
 		{
 			sf::Vector2f mouse_pos = { static_cast<float>(sf::Mouse::getPosition(*this->window_).x), static_cast<float>(sf::Mouse::getPosition(*this->window_).y) };
+			sf::Vector2f origin = sf::Vector2f(this->player_->getPos().x + this->player_->getBounds().width/2 - 18, 
+											   this->player_->getPos().y + this->player_->getBounds().height/2 - 18);
 
-			this->bullets_.push_back(new Bullet(this->player_->getPos(), mouse_pos, (*textures_ptr)["BULLET"], this->player_->getDamage()));
+			this->bullets_.push_back(new Bullet(origin, mouse_pos, (*textures_ptr)["BULLET"], this->player_->getDamage()));
 			
 			this->player_->resetTimeSinceLastShot();
 		}
@@ -550,6 +640,7 @@ void Level::update()
 	this->shoting();
 	this->playerWindowCollision();
 
+	this->updateDropCollision();
 	this->updateBullets();
 	this->updateEnemies();
 
@@ -577,20 +668,36 @@ void Level::renderBullets()
 	}
 }
 
+void Level::renderDrops()
+{
+	for (auto& el : this->drops_)
+	{
+		el->render(*this->window_);
+	}
+}
+
 void Level::render()
 {
 	this->window_->draw(*this->background_);
 
+	this->renderDrops();
+
 	this->renderBullets();
 
 	this->player_->render(*this->window_);
-	this->player_->renderGui(*this->window_);
 
 	this->renderEnemies();
+
+	this->player_->renderGui(*this->window_);
 
 	if (bossFight_)
 	{
 		this->boss_->render(*this->window_);
 		this->boss_->renderGui(*this->window_);
+	}
+
+	if (this->waveCooldownClock_->getElapsedTime().asSeconds() <= this->waveCooldown_.asSeconds())
+	{
+		this->window_->draw(this->waveText_);
 	}
 }

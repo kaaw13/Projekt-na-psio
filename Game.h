@@ -4,6 +4,7 @@
 #include "Bullet.h"
 #include "Enemy.h"
 #include "Level.h"
+#include "Pause.h"
 
 #include <map>
 
@@ -20,11 +21,25 @@ private:
 	std::vector<sf::RectangleShape*> buttons_;
 	std::vector<sf::Text*> menuTexts_;
 	bool isMenu_;
+	bool backspaceKeyReleased_;
+	bool enterKeyPressed_;
+	bool enteringNickname_;
+
+	//Pauza
+	Pause pause_;
+	sf::RectangleShape* menuButton_;
+
 
 	// resources
 	std::map<std::string, sf::Texture*> textures_;
 	std::vector<sf::Font*> fonts_;
 
+	//nickname
+	std::string text_;
+	std::string currentNickname_;
+	std::string playerNickname_;
+	int playerScore_;
+	
 	// player
 	Player* player_;
 
@@ -36,9 +51,12 @@ private:
 	void initTextures();
 	void initPlayer();
 
+	void initpauseMenu();
 	void initButtons();
 	void initText();
 	void initMenu();
+	void saveNickname(const std::string& filename, const std::string& nick, int wynik);
+	int findNickname(const std::string& filename, const std::string& nick);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS

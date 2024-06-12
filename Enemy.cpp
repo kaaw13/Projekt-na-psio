@@ -7,7 +7,6 @@
 void Enemy::initVariables()
 {
 	this->isStunned_ = false;
-	this->stunDuration_ = sf::seconds(2.f);
 }
 
 void Enemy::initClocks()
@@ -20,8 +19,8 @@ void Enemy::initClocks()
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp)
-	: Entity(position, texture, scale, speed, damage, maxHp)
+Enemy::Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp, sf::Time stun)
+	: Entity(position, texture, scale, speed, damage, maxHp), stunDuration_(stun)
 {
 	this->initVariables();
 	this->initClocks();
@@ -88,6 +87,8 @@ void Enemy::move(float px, float py)
 	float ry = py - (bounds.top + bounds.height/2);
 
 	// 2) stosunek Vx/Vy
+	if (ry == 0)
+		ry = 0.01f;
 	float ratio = rx / ry;
 
 	// 3) obliczenie Vy

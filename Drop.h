@@ -1,35 +1,40 @@
 #pragma once
 
-#include <iostream>
+#include "Player.h"
 
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
+enum DROP_TYPE
+{
+	EXP = 0, MEDKIT = 1
+};
 
 class Drop
 {
 private:
 	/// VARIABLES
 	sf::Sprite* sprite_;
+	DROP_TYPE type_;
+	int value_;		// experience or healing
 
 	/// INIT FUNCTIONS
 	void initSprite(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Drop(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale);
+	Drop(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, DROP_TYPE type, int value);
 	virtual ~Drop();
 
 	/// GETTERS
 	// inline
 	inline const sf::Vector2f& getPos()    const { return this->sprite_->getPosition(); };
 	inline const sf::FloatRect getBounds() const { return this->sprite_->getGlobalBounds(); };
+	inline const DROP_TYPE	   getType()   const { return this->type_; };
+	inline const int		   getValue()  const { return this->value_; };
 
 	/// SETTERS
 
 
 	/// FUNCTIONS
-	void update();
+	void collide(Player* player);
 	void render(sf::RenderTarget& target);
 };
 
