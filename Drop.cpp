@@ -15,7 +15,8 @@ void Drop::initSprite(sf::Vector2f position, sf::Texture* texture, sf::Vector2f 
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Drop::Drop(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale)
+Drop::Drop(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, DROP_TYPE type, int value)
+	: type_(type), value_(value)
 {
 	this->initSprite(position, texture, scale);
 }
@@ -39,9 +40,21 @@ Drop::~Drop()
 /// FUNCTIONS
 ///
 
-void Drop::update()
+void Drop::collide(Player* player)
 {
-	//
+	switch (this->type_)
+	{
+	case DROP_TYPE::EXP:
+		player->addExp(this->value_);
+		break;
+
+	case DROP_TYPE::MEDKIT:
+		player->heal(this->value_);
+		break;
+
+	default:
+		break;
+	}
 }
 
 void Drop::render(sf::RenderTarget& target)

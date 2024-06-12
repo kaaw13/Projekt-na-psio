@@ -5,19 +5,21 @@
 class Pause
 {
 private:
-    bool paused;
-    
+    // VARIABLES
+    bool paused;  
 
 public:
+    // CONSTRUCTORS AND DESTRUCTORS
     Pause();
     ~Pause();
 
+    // GETTERS
+    bool isPaused() const;  
+
+    // FUNCTIONS
     void pause();
     void resume();
-    
 
-    bool isPaused() const;
-    
 };
 
 

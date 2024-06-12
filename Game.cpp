@@ -35,10 +35,10 @@ void Game::initTextures()
 		std::cout << "GAME::INITTEXTURES::Failed to load playerSheet.png\n";
 	}
 
-	this->textures_["ENEMY_SHEET"] = new sf::Texture;
-	if (!this->textures_["ENEMY_SHEET"]->loadFromFile("Textures/enemySheet.png"))
+	this->textures_["ENEMY_1"] = new sf::Texture;
+	if (!this->textures_["ENEMY_1"]->loadFromFile("Textures/enemy1.png"))
 	{
-		std::cout << "GAME::INITTEXTURES::Failed to load enemySheet.png\n";
+		std::cout << "GAME::INITTEXTURES::Failed to load enemy1.png\n";
 	}
 
 	this->textures_["BACKGROUND_1"] = new sf::Texture;
@@ -52,10 +52,29 @@ void Game::initTextures()
 	{
 		std::cout << "GAME::INITTEXTURES::Failed to load bullet.png\n";
 	}
+
 	this->textures_["PLAYER_IMMUNITY"] = new sf::Texture;
 	if (!this->textures_["PLAYER_IMMUNITY"]->loadFromFile("Textures/playerImmunity.png"))
 	{
 		std::cout << "GAME::INITTEXTURES::Failed to load playerImmunity.png\n";
+	}
+
+	this->textures_["BOSS_1"] = new sf::Texture;
+	if (!this->textures_["BOSS_1"]->loadFromFile("Textures/boss1.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load boss1.png\n";
+	}
+
+	this->textures_["EXP_DROP"] = new sf::Texture;
+	if (!this->textures_["EXP_DROP"]->loadFromFile("Textures/expDrop.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load expDrop.png\n";
+	}
+
+	this->textures_["MEDKIT"] = new sf::Texture;
+	if (!this->textures_["MEDKIT"]->loadFromFile("Textures/medkit.png"))
+	{
+		std::cout << "GAME::INITTEXTURES::Failed to load medkit.png\n";
 	}
 }
 
@@ -307,7 +326,7 @@ void Game::updatePollEvents()
 				pause_.pause();
 			}
 		}
-		if (this->e.type == sf::Event::TextEntered && enteringNickname_ ==true )
+		if (this->e.type == sf::Event::TextEntered && enteringNickname_ == true )
 		{
 			if (this->e.text.unicode < 128)
 			{
@@ -322,14 +341,11 @@ void Game::updatePollEvents()
 			{
 				this->text_.pop_back();
 				this->menuTexts_[2]->setString(this->text_);
-				
 			}
 		}
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 			if (this->menuButton_ != nullptr && this->menuButton_->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 			{
-				// Your code here
-
 				if (this->menuButton_->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
 				{
 					// Przejœcie do menu
@@ -409,7 +425,7 @@ void Game::updateMenu()
 			this->findNickname("Nickname/wyniki.txt", this->playerNickname_);
 			break;
 		default:
-			
+
 			break;
 		}
 		this->menuTexts_[9]->setString(this->playerNickname_ + " " + std::to_string(playerScore_));

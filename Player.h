@@ -22,10 +22,19 @@ private:
 	sf::Time immunityDuration_;
 	sf::Time timeSinceDamaged_;
 
-	// healthbar
+	// Gui
 	sf::Vector2f windowSize_;
+
 	sf::RectangleShape healthbar_;
 	sf::RectangleShape healthbarBack_;
+
+	sf::RectangleShape expBar_;
+	sf::RectangleShape expBarBack_;
+
+	// level
+	unsigned level_;
+	unsigned currentExperience_;
+	unsigned expForLevelup_;
 
 	/// INIT FUNCTIONS
 	void initVariables();
@@ -44,12 +53,14 @@ public:
 	/// SETTERS
 	void damage(unsigned damage);
 	void resetTimeSinceLastShot();
+	void addExp(unsigned exp);
 
 	/// FUNCTIONS.
 	void moveWasd();
 	void updateImmunity();
 	void updateGui();
 	void renderGui(sf::RenderTarget& target);
+	void updateLevel();
 
 	void update();
 };

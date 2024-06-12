@@ -6,7 +6,7 @@
 
 void Boss::initVariables()
 {
-	this->setStunDuration(sf::seconds(0.1f));
+	//
 }
 
 void Boss::initGui()
@@ -24,10 +24,9 @@ void Boss::initGui()
 /// CONSTRUCTORS AND DESTRUCTORS
 ///
 
-Boss::Boss(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp)
-	: Enemy(position, texture, scale, speed, damage, maxHp)
+Boss::Boss(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp, sf::Time stun)
+	: Enemy(position, texture, scale, speed, damage, maxHp, stun) 
 {
-	this->initVariables();
 	this->initGui();
 }
 

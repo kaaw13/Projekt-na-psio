@@ -1,8 +1,16 @@
 #include "Pause.h"
 
+/// CONSTRUCTOR AND DESTRUCTOR
 Pause::Pause() : paused(false) {}
-
 Pause::~Pause() {}
+
+/// GETTERS
+bool Pause::isPaused() const {
+    return paused;
+}
+
+/// FUNCTIONS
+
 //pauzowanie
 void Pause::pause() {
     
@@ -19,10 +27,5 @@ void Pause::resume() {
     
 }
 
-
-
-bool Pause::isPaused() const {
-    return paused;
-}
 
 

@@ -2,6 +2,7 @@
 
 #include "Player.h"
 #include "Boss.h"
+#include "Drop.h"
 
 #include <fstream>
 #include <vector>
@@ -10,16 +11,31 @@ class Level
 {
 private:
 	/// VARIABLES
-	// from file
+
+	// FROM FILE
+	// textures
 	std::string background_texture_key;
 	std::string enemy_texture_key;
+	std::string boss_texture_key; 
+
+	// enemy stats
 	float enemySpeed_;
 	unsigned enemyMaxHp_;
 	unsigned enemyDamage_;
+	sf::Vector2f enemyScale_;
+	sf::Time enemyStun_;
 
 	unsigned numberOfEnemies_;
 	unsigned enemyCounter_;
 
+	// boss stats
+	float bossSpeed_; 
+	unsigned bossMaxHp_; 
+	unsigned bossDamage_; 
+	sf::Vector2f bossScale_; 
+	sf::Time bossStun_; 
+
+	// STATIC
 	// window
 	sf::RenderWindow* window_;
 	sf::Sprite* background_;
@@ -37,6 +53,11 @@ private:
 
 	sf::Clock* spawnClock_;
 	sf::Time spawnCooldown_;
+
+	// drops
+	std::vector<Drop*> drops_;
+	unsigned dropHeal_;
+	unsigned dropExp_;
 
 	// waves
 	sf::Clock* waveCooldownClock_;
@@ -64,9 +85,11 @@ public:
 
 
 	/// FUNCTIONS
+	// window related
 	void shoting();
 	void playerWindowCollision();
 
+	// enemy related
 	sf::Vector2f randSpawnPosition();
 	void createEnemy();
 	void nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change);
@@ -79,15 +102,23 @@ public:
 
 	void updateBoss();
 
+	// drop related
+	void createDrop(sf::Vector2f position);
+	void updateDropCollision();
+
+	// bullet related
 	bool bulletEnemyCollision(Bullet* bullet, unsigned& counter);
 	bool cullBullet(Bullet* bullet, unsigned& counter);
 	void deleteBullet(unsigned& counter);
 	void updateBullets();
 
+	// main update
 	void update();
 
+	// remdering
 	void renderEnemies();
 	void renderBullets();
+	void renderDrops();
 	void render();
 };
 

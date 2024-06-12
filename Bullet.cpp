@@ -30,6 +30,8 @@ void Bullet::initVariables(sf::Vector2f player_pos, sf::Vector2f mouse_pos)
 	float ry = mouse_pos.y - player_pos.y;
 
 	// 2) stosunek Vx do Vy
+	if (ry == 0)
+		ry = 0.01f;
 	float ratio = rx / ry;
 
 	// 3) obliczenie Vy

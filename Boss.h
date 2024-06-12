@@ -24,7 +24,7 @@ private:
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS
-	Boss(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp);
+	Boss(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp, sf::Time stun);
 	virtual ~Boss();
 
 	/// GETTERS

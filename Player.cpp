@@ -9,6 +9,10 @@ void Player::initVariables()
     this->shotCooldown_ = sf::seconds(0.7f);
     this->immunityDuration_ = sf::seconds(2.f);
     this->immunity_ = false;
+
+    this->currentExperience_ = 0;
+    this->expForLevelup_ = 10;
+    this->level_ = 1;
 }
 
 void Player::initClocks()
@@ -23,12 +27,20 @@ void Player::initClocks()
 void Player::initGui()
 {
     // healthbar
-    this->healthbar_.setSize(sf::Vector2f(300.f, 25.f));
+    this->healthbar_.setSize(sf::Vector2f(500.f, 25.f));
     this->healthbar_.setFillColor(sf::Color::Red);
-    this->healthbar_.setPosition(sf::Vector2f(10.f, this->windowSize_.y - 35.f));
+    this->healthbar_.setPosition(sf::Vector2f(30.f, this->windowSize_.y - 45.f));
 
     this->healthbarBack_ = this->healthbar_;
     this->healthbarBack_.setFillColor(sf::Color(25, 25, 25, 200));
+
+    // experience bar
+    this->expBar_.setSize(sf::Vector2f(500.f, 25.f));
+    this->expBar_.setFillColor(sf::Color::Green);
+    this->expBar_.setPosition(sf::Vector2f(sf::Vector2f(30.f, 30.f)));
+
+    this->expBarBack_ = this->expBar_;
+    this->expBarBack_.setFillColor(sf::Color(25, 25, 25, 200));
 }
 
 ///
@@ -105,6 +117,12 @@ void Player::resetTimeSinceLastShot()
     this->timeSinceLastShot_ = sf::Time::Zero;
 }
 
+void Player::addExp(unsigned exp)
+{
+    this->currentExperience_ += exp;
+    this->updateLevel();
+}
+
 ///
 /// FUNCTIONS
 ///
@@ -161,6 +179,26 @@ void Player::updateGui()
     // healthbar
     float hpPercent = static_cast<float>(this->getHp()) / this->getMaxHp();
     this->healthbar_.setSize(sf::Vector2f(hpPercent * this->healthbarBack_.getSize().x, this->healthbar_.getSize().y));
+
+    // experience bar
+    float expPercent = static_cast<float>(this->currentExperience_) / static_cast<float>(this->expForLevelup_);
+    this->expBar_.setSize(sf::Vector2f(expPercent * this->expBarBack_.getSize().x, this->expBar_.getSize().y));
+}
+
+void Player::updateLevel()
+{
+    /*
+        @returns void
+
+        funckja wywo³ywana przy zebraniu doœwiadczenia, sprawdza czy wystarczy³o go do level-upu i podwy¿sza poziom gracza
+    */
+
+    if (this->currentExperience_ >= this->expForLevelup_)
+    {
+        this->level_++;
+        this->currentExperience_ = 0;
+        this->expForLevelup_ *= 1.2;
+    }
 }
 
 void Player::update()
@@ -178,4 +216,9 @@ void Player::renderGui(sf::RenderTarget& target)
     // healthbar
     target.draw(this->healthbarBack_);
     target.draw(this->healthbar_);
+
+    // experience bar
+    target.draw(this->expBarBack_);
+    target.draw(this->expBar_);
 }
+
