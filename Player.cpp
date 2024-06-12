@@ -13,6 +13,8 @@ void Player::initVariables()
     this->currentExperience_ = 0;
     this->expForLevelup_ = 10;
     this->level_ = 1;
+   
+    
 }
 
 void Player::initClocks()
@@ -68,7 +70,8 @@ Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture*
 
 Player::~Player()
 {
-
+   
+   
 }
 
 ///

@@ -49,7 +49,9 @@ public:
 	/// GETTERS
 	const float getTimeSinceLastShoot() const;
 	const float getShootCooldown() const;
-
+	//inline
+	inline const unsigned getLevel()        const { return this->level_; };
+	inline const unsigned getCurrentExp()    const { return this->currentExperience_; };
 	/// SETTERS
 	void damage(unsigned damage);
 	void resetTimeSinceLastShot();
@@ -61,7 +63,9 @@ public:
 	void updateGui();
 	void renderGui(sf::RenderTarget& target);
 	void updateLevel();
-
+	
 	void update();
+	friend class Game;
+
 };
 

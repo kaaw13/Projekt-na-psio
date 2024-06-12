@@ -38,7 +38,7 @@ private:
 	std::string text_;
 	std::string currentNickname_;
 	std::string playerNickname_;
-	int playerScore_;
+	
 	
 	// player
 	Player* player_;
@@ -55,8 +55,9 @@ private:
 	void initButtons();
 	void initText();
 	void initMenu();
-	void saveNickname(const std::string& filename, const std::string& nick, int wynik);
-	int findNickname(const std::string& filename, const std::string& nick);
+	void saveNickname(const std::string& filename, const std::string& nick,unsigned poziom,unsigned xp );
+	void enterNickname(const std::string& filename, unsigned poziom, unsigned xp);
+	int findNickname(const std::string& filename, const std::string& nick, unsigned poziom, unsigned xp);
 
 public:
 	/// CONSTRUCTORS AND DESTRUCTORS

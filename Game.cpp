@@ -17,6 +17,7 @@ void Game::initPlayer()
 {
 	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2),
 		textures_["PLAYER_SHEET"], textures_["PLAYER_IMMUNITY"], this->window_->getSize());
+	
 }
 
 void Game::initTextures()
@@ -176,66 +177,8 @@ void Game::initMenu()
 	this->isMenu_ = true;
 	this->initText();
 	this->initButtons();
-	
-	
+		
 }
-
-//zapisywanie nicku
-void Game::saveNickname(const std::string& filename, const std::string& nick, int wynik)
-{
-	std::ofstream file;
-	file.open(filename, std::ios::app);
-
-	if (file.is_open()) {
-		file << nick << " " << wynik << "\n";
-		file.close();
-		std::cout << "Zapisano do pliku tekstowego.\n";
-	}
-	else {
-		std::cerr << "Nie mo¿na otworzyæ pliku: " << filename << "\n";
-		perror("B³¹d");
-	}
-}
-
-int Game::findNickname(const std::string& filename, const std::string& nick) {
-	std::ifstream file(filename);
-	std::string line;
-	bool found = false;
-
-	if (file.is_open()) {
-		while (std::getline(file, line)) {
-			size_t spacePos = line.find(' ');
-			currentNickname_ = line.substr(0, spacePos);
-			try {
-				playerScore_ = std::stoi(line.substr(spacePos + 1));
-			}
-			catch (const std::invalid_argument& e) {
-				// Obs³uga wyj¹tku std::invalid_argument
-				std::cerr << "Nieprawid³owy format liczby: " << e.what() << std::endl;
-				playerScore_ = 0; // Ustawienie wartoœci domyœlnej
-			}
-
-			if (currentNickname_ == nick) {
-				std::cout << "Znaleziono nick: " << nick << "\n";
-				found = true;
-				return 1;
-			}
-		}
-		file.close();
-		if (!found) {
-			std::cout << "Gracz o nicku " << nick << " nie znaleziony.\n";
-			return 0;
-		}
-	}
-	else {
-		std::cerr << "Nie mo¿na otworzyæ pliku.\n";
-	}
-
-	return -1; // Dodane dla pe³noœci, aby upewniæ siê, ¿e funkcja zawsze zwraca wartoœæ
-}
-
-
-
 
 ///
 /// CONSTRUCTORS AND DESTRUCTORS
@@ -359,6 +302,76 @@ void Game::updatePollEvents()
 	}
 }
 
+
+///////////////////////////////////
+//zapisywanie nicku
+
+
+void Game::saveNickname(const std::string& filename, const std::string& nick, unsigned poziom, unsigned xp) {
+	std::ofstream file;
+	file.open(filename, std::ios::app);
+
+	if (file.is_open()) {
+		file << nick << " " << poziom << " " << xp << "\n";
+		file.close();
+		std::cout << "Zapisano do pliku tekstowego.\n";
+	}
+	else {
+		std::cerr << "Nie mo¿na otworzyæ pliku: " << filename << "\n";
+		
+	}
+}
+
+int Game::findNickname(const std::string& filename, const std::string& nick, unsigned poziom, unsigned xp) {
+	std::ifstream file(filename);
+	std::string line;
+	bool found = false;
+
+	if (file.is_open()) {
+		while (std::getline(file, line)) {
+			size_t spacePos = line.find(' ');
+			currentNickname_ = line.substr(0, spacePos);
+			if (currentNickname_ == nick) {
+				std::cout << "Znaleziono nick: " << nick << "\n";
+				found = true;
+
+				size_t nextSpacePos = line.find(' ', spacePos + 1);
+				if (nextSpacePos == std::string::npos) {
+					poziom = std::stoi(line.substr(spacePos + 1));
+				}
+				else {
+					poziom = std::stoi(line.substr(spacePos + 1, nextSpacePos - spacePos - 1));
+				}
+
+				size_t nextSpacePosAfterXp = line.find(' ', nextSpacePos + 1);
+				if (nextSpacePosAfterXp == std::string::npos) {
+					xp = std::stoi(line.substr(nextSpacePos + 1));
+				}
+				else {
+					xp = std::stoi(line.substr(nextSpacePos + 1, nextSpacePosAfterXp - nextSpacePos - 1));
+				}
+				return 1; // Znaleziono nick, przerywamy pêtlê
+			}
+		}
+		if (!found) {
+			std::cout << "Nie znaleziono nicku: " << nick << "\n";
+			return 0; // Nick nie zosta³ znaleziony
+		}
+	}
+	else {
+		std::cerr << "Nie mo¿na otworzyæ pliku.\n";
+		return -1; // B³¹d otwarcia pliku
+	}
+
+	return 0; // Nick nie zosta³ znaleziony (dla pe³noœci)
+}
+
+void Game::enterNickname(const std::string& filename, unsigned poziom, unsigned xp) {
+
+}
+
+
+
 // UPDATES
 
 void Game::updateMenu()
@@ -400,38 +413,64 @@ void Game::updateMenu()
 		}
 	
 		else if (this->buttons_[4]->getGlobalBounds().contains(this->mousePos_.x, this->mousePos_.y))
-		{
-			
+		{	
 			enteringNickname_ = true;
-			
-			
 		}
 		
 		 
 	}
-	//wczytywanie nicku
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter))
+	///////////////
+	//wczytywanie nicku
+	///////////////
+
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)&& this->enteringNickname_)
 	{
 		this->playerNickname_ = text_;
 		this->menuTexts_[2]->setString(this->playerNickname_);
-		int wyniki = 0;
-		switch (this->findNickname("Nickname/wyniki.txt", this->playerNickname_))
+		std::cout << "Nick: " << this->playerNickname_ << "\n";
+		if (this->findNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->getLevel(),this->player_->getCurrentExp()) == 0)
 		{
-		case 0: // Nick nie zosta³ znaleziony
-			this->saveNickname("Nickname/wyniki.txt", this->playerNickname_, wyniki);
-			break;
-		case 1: // Nick zosta³ znaleziony
-			this->findNickname("Nickname/wyniki.txt", this->playerNickname_);
-			break;
-		default:
-
-			break;
+			this->saveNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->getLevel(), this->player_->getCurrentExp());
+			std::cout << "Zapisano do pliku tekstowego.\n";
 		}
-		this->menuTexts_[9]->setString(this->playerNickname_ + " " + std::to_string(playerScore_));
-		this->enteringNickname_ = false;
-		
+		else
+		{
+			this->findNickname("Nickname/wyniki.txt", this->playerNickname_, this->player_->getLevel(), this->player_->getCurrentExp());
+			std::cout << "Znaleziono nick: " << this->playerNickname_ << "\n";
+		}
+		//switch (this->findNickname("Nickname/wyniki.txt", this->playerNickname_,1, 0))
+		//{ 
+		//	case 0: // Nick nie zosta³ znaleziony
+		//	this->saveNickname("Nickname/wyniki.txt", this->playerNickname_, 1, 0);
+		//	std::cout << "Zapisano do pliku tekstowego.\n";
+		//	break;
+		//	case 1: // Nick zosta³ znaleziony
+		//		this->findNickname("Nickname/wyniki.txt", this->playerNickname_,1,0);
+		//		std::cout << "Znaleziono nick: " << this->playerNickname_ << "\n";
+		//		break;
+		//	default:
+		//		break;
+		//		}
+		//switch (this->findNickname("Nickname/wyniki.txt", this->playerNickname_))
+		//{
+		//case 0: // Nick nie zosta³ znaleziony
+		//	//this->saveNickname("Nickname/wyniki.txt", this->playerNickname_, wyniki);
+		//	break;
+		//case 1: // Nick zosta³ znaleziony
+		//	//this->findNickname("Nickname/wyniki.txt", this->playerNickname_);
+		//	break;
+		//default:
+
+		//	break;
+		//}
+		//this->menuTexts_[9]->setString(this->playerNickname_ + " " + std::to_string(playerScore_));
+		this->enteringNickname_ = false;	
 	}
+
+
+
 	//obsluga backspace
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::BackSpace) && this->backspaceKeyReleased_)
 	{
