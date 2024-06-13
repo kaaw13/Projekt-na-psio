@@ -67,8 +67,8 @@ Player::Player(sf::Vector2f position, sf::Texture* default_texture, sf::Texture*
 
 	this->initVariables();
     this->initClocks();
-    this->initGui();
     this->initialLevelUp();
+    this->initGui();
 }
 
 Player::~Player()

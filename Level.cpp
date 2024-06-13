@@ -6,6 +6,8 @@
 
 void Level::initVariables()
 {
+	// inicjalizuje zmienne
+
 	this->enemyCounter_ = 0;
 	this->wave_1 = true;
 	this->wave_2 = false;
@@ -70,12 +72,7 @@ void Level::initFromFiles(std::string path)
 
 void Level::initBackground()
 {
-	/*
-		@returns void
-
-		pierwszy * to dereferacja wskaźnika prowadząca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wskaźnik do szukanej tekstury, który deferencj(ujemy?) i
-		otrzymujemy już samą teksturę.
-	*/
+	// initialises the background
 
 	this->background_ = new sf::Sprite;
 	this->background_->setTexture(*(*textures_ptr)[this->background_texture_key]);
@@ -83,12 +80,16 @@ void Level::initBackground()
 
 void Level::initClocks()
 {
+	// initialises the clock
+
 	this->spawnClock_ = new sf::Clock;
 	this->waveCooldownClock_ = new sf::Clock;
 }
 
 void Level::initText()
 {
+	// initialises text, visible in between waves
+
 	this->waveText_.setFont(*this->font_);
 	this->waveText_.setCharacterSize(50);
 	this->waveText_.setString("WAVE 1!");
@@ -110,6 +111,7 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 		- Game::player_
 		- Game::window_
 		- Game::textures_
+		- czcioki z Game::fonts_
 		Następnie wywołuje funkcje inicjalizacyjne
 	*/
 
@@ -124,6 +126,8 @@ Level::Level(Player* player, sf::RenderWindow* window, std::map<std::string, sf:
 
 Level::~Level()
 {
+	// deletes all objects
+
 	for (auto& el : this->enemies_)
 	{
 		delete el;
@@ -145,6 +149,14 @@ Level::~Level()
 
 const bool Level::bossDefeated() const
 {
+	/*
+		@returns bool
+
+		checks if boss fight ended
+		- if so returns true
+		- else returns false
+	*/
+
 	if (this->bossFight_ && this->boss_->getHp() <= 0)
 	{
 		std::cout << "enemy counter = " << enemyCounter_ << " - enemies_.size() = " << enemies_.size() << std::endl;
@@ -153,10 +165,6 @@ const bool Level::bossDefeated() const
 	else
 		return false;
 }
-
-///
-/// SETTERS
-///
 
 ///
 /// FUNCTIONS
@@ -246,14 +254,12 @@ void Level::createEnemy()
 	/*
 		- dodanie przeciwnika, z użyciem funkcji randSpawnPosition() nadającej mu początkową pozycję
 		- restart spawnClock_
-		- pierwszy * to dereferacja wskaźnika prowadząca nas do mapy, klucz ["NAZWA_TEKSTURY"] wskazuje nam wskaźnik do szukanej tekstury, który deferencj(ujemy?) i
-		otrzymujemy już samą teksturę.
+		- zwiększenie licznika przeciwników
 	*/
 
 	this->enemies_.push_back(new Enemy(randSpawnPosition(), (*textures_ptr)[enemy_texture_key], enemyScale_, enemySpeed_, enemyDamage_, enemyMaxHp_, enemyStun_));
 	this->spawnClock_->restart();
 	this->enemyCounter_++;
-	std::cout << "enemy number " << enemyCounter_ << std::endl;
 }
 
 void Level::nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change, float spawn_cooldown_change)
@@ -262,6 +268,11 @@ void Level::nextWave(bool& prev_wave, bool& next_wave, float enemy_amount_change
 		@returns void
 
 		przełącza fale
+		- zeruje enemyCounter_
+		- zwiększa ilość przeciwników do stworzenia w nastepnej fali
+		- zmiejsza czas pojawiania się nowych przeciwników
+		- przełącza zmienne bool odpowiedzialne za fale
+		- resetuje waveCooldwonClock_ - rozpoczyna chwilę przerwy w pojawianiu się przeciwników pomiędzy falami
 	*/
 
 	this->enemyCounter_ = 0;

@@ -4,14 +4,14 @@
 /// INIT FUNCTIONS
 ///
 
-void Boss::initVariables()
-{
-	//
-}
-
 void Boss::initGui()
 {
-	// healthbar
+	/*
+		@returns void
+
+		initialises the healthbar
+	*/
+
 	this->healthbar_.setSize(sf::Vector2f(this->getBounds().width, 15.f));
 	this->healthbar_.setFillColor(sf::Color::Red);
 	this->healthbar_.setPosition(this->getPos().x, this->getPos().y - 20);
@@ -27,23 +27,15 @@ void Boss::initGui()
 Boss::Boss(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp, sf::Time stun)
 	: Enemy(position, texture, scale, speed, damage, maxHp, stun) 
 {
+	// wywo³uje konstruktor klasy enemy i funkcje initGui() - inicjalizuj¹c¹ healthbar
+
 	this->initGui();
 }
 
 Boss::~Boss()
 {
-
+	//
 }
-
-///
-/// GETTERS
-///
-
-
-///
-/// SETTERS
-///
-
 
 ///
 /// FUNCTIONS
@@ -51,17 +43,26 @@ Boss::~Boss()
 
 void Boss::updateGui()
 {
-	// healthbar
+	/*
+		@returns void
+
+		funkcja aktualizuje healthbar
+		- oblicza procent wype³nienia dziel¹c aktualne zdrowie przez maksymalne
+		- zmienia d³ugoœæ paska zdrowia
+		- przesuwa pasek zdrowia razem z bossem
+	*/
+
 	float hpPercent = static_cast<float>(this->getHp()) / this->getMaxHp();
 	this->healthbar_.setSize(sf::Vector2f(hpPercent * this->healthbarBack_.getSize().x, this->healthbar_.getSize().y));
 
-	this->healthbarBack_.setPosition(this->getPos());
-	this->healthbar_.setPosition(this->getPos());
+	this->healthbarBack_.setPosition(sf::Vector2f(this->getPos().x, this->getPos().y - 20));
+	this->healthbar_.setPosition(sf::Vector2f(this->getPos().x, this->getPos().y - 20));
 }
 
 void Boss::renderGui(sf::RenderTarget& target)
 {
-	// healthbar
+	// renders healthbar on a given RenderTarget (Game::window_)
+
 	target.draw(this->healthbarBack_);
 	target.draw(this->healthbar_);
 }

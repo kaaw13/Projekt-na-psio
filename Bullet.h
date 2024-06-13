@@ -32,11 +32,7 @@ public:
 	inline const sf::FloatRect getBounds() const { return this->sprite_.getGlobalBounds(); };
 	inline const unsigned	   getDamage() const { return this->damage_; };
 
-	/// SETTERS
-
-
 	/// FUNCTIONS
 	void update();
-
 	void render(sf::RenderTarget& target);
 };

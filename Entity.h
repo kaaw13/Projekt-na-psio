@@ -6,6 +6,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
+/*
+	Klasa abstrakcyjna stanowi¹ca bazê dla klas Enemy, Player oraz Boss
+	Zawiera podstawowe zmienne potrzebne ka¿demej z tych klas oraz podstawowe funkcje pozwalaj¹ce na nich pracowaæ
+*/
+
 class Entity
 {
 private:

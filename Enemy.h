@@ -20,14 +20,12 @@ public:
 	Enemy(sf::Vector2f position, sf::Texture* texture, sf::Vector2f scale, float speed, unsigned damage, unsigned maxHp, sf::Time stun);
 	virtual ~Enemy();
 
-	/// GETTERS
-
 	/// SETTERS
-	void damage(unsigned damage);
 	void stun();
 	void setStunDuration(sf::Time duration);
 
 	/// FUNCTIONS
+	void damage(unsigned damage);
 	void move(float px, float py);
 	void updateStun();
 	void update();

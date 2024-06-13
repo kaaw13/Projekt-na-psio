@@ -6,8 +6,16 @@
 
 void Game::initWindow()
 {
-	//this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "nazwa", sf::Style::Fullscreen);	// okno docelowe
-	this->window_ = new sf::RenderWindow(sf::VideoMode(1200, 900), "nazwa", sf::Style::Close);			// okienko tymczasowe do wygodniejszego testowania
+	/*
+		@returns void
+
+		initialises the window
+		- size and style
+		- limiting framerate
+	*/
+
+	this->window_ = new sf::RenderWindow(sf::VideoMode(1920, 1080), "window", sf::Style::Fullscreen);	// okno docelowe
+	//this->window_ = new sf::RenderWindow(sf::VideoMode(1200, 900), "window", sf::Style::Close);			// okienko tymczasowe do wygodniejszego testowania
 	this->window_->setFramerateLimit(144);
 	this->window_->setVerticalSyncEnabled(false);
 	std::cout << "initWindow\n";
@@ -15,15 +23,20 @@ void Game::initWindow()
 
 void Game::initPlayer()
 {
+	// creates a default player
+
 	this->player_ = new Player(sf::Vector2f(this->window_->getSize().x / 2, this->window_->getSize().y / 2),
 		textures_["PLAYER_SHEET"], textures_["PLAYER_IMMUNITY"], this->window_->getSize(), this->fonts_[1]);
 }
 
 void Game::initVariables()
 {
+	// initialises variabels
+
 	this->levelFromFile_ = 1;
 	this->expFromFile_ = 0;
 	this->playerFound_ = false;
+	this->playerNickname_ = " ";
 }
 
 void Game::initTextures()
@@ -32,8 +45,12 @@ void Game::initTextures()
 		@returns void
 
 		wczytuje wszystkie textury i dodaje je do wektora textures_
-		- playerSheet
-		- enemySheet
+		- player textures
+		- bullet
+		- backgrounds
+		- enemies
+		- bosses
+		- drops
 	*/
 
 	this->textures_["PLAYER_SHEET"] = new sf::Texture;
@@ -117,6 +134,13 @@ void Game::initTextures()
 
 void Game::initText()
 {
+	/*
+		@returns void
+
+		- initialises fonts and adds them to the fonts_ vector
+		- initialises menu texts
+	*/
+
 	this->fonts_.push_back(new sf::Font);	
 	if (!this->fonts_[0]->loadFromFile("Fonts/ARCADECLASSIC.ttf"))
 	{
@@ -129,64 +153,77 @@ void Game::initText()
 		std::cout << "GAME::INITFONTS::Failed to load FFFFORWA.ttf\n";
 	}
 
-	this->menuTexts_.push_back(new sf::Text("Balls of death", *this->fonts_[0], 44));
+	this->menuTexts_.push_back(new sf::Text("Very epic game", *this->fonts_[0], 64));
 	this->menuTexts_[0]->setFillColor(sf::Color::White);
-	this->menuTexts_[0]->setPosition(sf::Vector2f(50.f, 10.f));
+	this->menuTexts_[0]->setPosition(sf::Vector2f(this->window_->getSize().x/2 - this->menuTexts_[0]->getGlobalBounds().width/2, 30.f));
 
 	this->menuTexts_.push_back(new sf::Text("Enter your nick", *this->fonts_[0], 44));
 	this->menuTexts_[1]->setFillColor(sf::Color::White);
-	this->menuTexts_[1]->setPosition(sf::Vector2f(50.f, 50.f));
+	this->menuTexts_[1]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->menuTexts_[1]->getGlobalBounds().width - 20, 400.f));
 
 	this->menuTexts_.push_back(new sf::Text("", *this->fonts_[0], 44));
 	this->menuTexts_[2]->setFillColor(sf::Color::White);
-	this->menuTexts_[2]->setPosition(sf::Vector2f(500.f, 50.f));
+	this->menuTexts_[2]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 + 20, 400.f));
 
 	this->menuTexts_.push_back(new sf::Text("Level 1", *this->fonts_[0], 44));
 	this->menuTexts_[3]->setFillColor(sf::Color::Magenta);
-	this->menuTexts_[3]->setPosition(sf::Vector2f(150.f, 250.f));
+	this->menuTexts_[3]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->menuTexts_[3]->getGlobalBounds().width / 2 - 250, 250.f));
 	this->menuTexts_.push_back(new sf::Text("Level 2", *this->fonts_[0], 44));
 	this->menuTexts_[4]->setFillColor(sf::Color::Magenta);
-	this->menuTexts_[4]->setPosition(sf::Vector2f(350.f, 250.f));
+	this->menuTexts_[4]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->menuTexts_[4]->getGlobalBounds().width / 2 + 50, 250.f));
 	this->menuTexts_.push_back(new sf::Text("Level 3", *this->fonts_[0], 44));
 	this->menuTexts_[5]->setFillColor(sf::Color::Magenta);
-	this->menuTexts_[5]->setPosition(sf::Vector2f(550.f, 250.f));
+	this->menuTexts_[5]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->menuTexts_[5]->getGlobalBounds().width / 2 + 350, 250.f));
+
 	this->menuTexts_.push_back(new sf::Text("Exit", *this->fonts_[0], 44));
 	this->menuTexts_[6]->setFillColor(sf::Color::Magenta);
-	this->menuTexts_[6]->setPosition(sf::Vector2f(150.f, 450.f));
+	this->menuTexts_[6]->setPosition(sf::Vector2f(this->buttons_[3]->getPosition().x + 50, 650.f));
 
-	this->menuTexts_.push_back(new sf::Text("Player", *this->fonts_[0], 44));
+	this->menuTexts_.push_back(new sf::Text("Enter nick", *this->fonts_[0], 44));
 	this->menuTexts_[7]->setFillColor(sf::Color::Magenta);
-	this->menuTexts_[7]->setPosition(sf::Vector2f(350.f, 450.f));
+	this->menuTexts_[7]->setPosition(sf::Vector2f(this->buttons_[4]->getPosition().x + 50, 650.f));
 	
 }
 
 void Game::initButtons()
 {
+	/*
+		@returns void
+
+		initialises menu buttons and adds them to buttons_ vector
+	*/
+
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
-	this->buttons_[0]->setPosition(sf::Vector2f(100.f, 200.f));
+	this->buttons_[0]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->buttons_[0]->getGlobalBounds().width / 2 - 300, 200.f));
 	this->buttons_[0]->setFillColor(sf::Color::White);
 
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
-	this->buttons_[1]->setPosition(sf::Vector2f(300.f, 200.f));
+	this->buttons_[1]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->buttons_[1]->getGlobalBounds().width / 2, 200.f));
 	this->buttons_[1]->setFillColor(sf::Color::White);
 
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
-	this->buttons_[2]->setPosition(sf::Vector2f(500.f, 200.f));
+	this->buttons_[2]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - this->buttons_[2]->getGlobalBounds().width / 2 + 300, 200.f));
 	this->buttons_[2]->setFillColor(sf::Color::White);
 
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
-	this->buttons_[3]->setPosition(sf::Vector2f(100.f, 400.f));
+	this->buttons_[3]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 - 2*this->buttons_[3]->getGlobalBounds().width, 600.f));
 	this->buttons_[3]->setFillColor(sf::Color::Blue);
 
 	this->buttons_.push_back(new sf::RectangleShape(sf::Vector2f(100.f, 100.f)));
-	this->buttons_[4]->setPosition(sf::Vector2f(300.f, 400.f));
+	this->buttons_[4]->setPosition(sf::Vector2f(this->window_->getSize().x / 2 + 1*this->buttons_[0]->getGlobalBounds().width, 600.f));
 	this->buttons_[4]->setFillColor(sf::Color::Yellow);
-
-	
 }
 
 void Game::initpauseMenu()
 {
+	/*
+		@returns void
+
+		initialises pause menu
+		- text
+		- button
+	*/
+
 	pauseText_.setFont(*this->fonts_[0]);
 	pauseText_.setString("Pause");
 	pauseText_.setCharacterSize(72);
@@ -205,13 +242,13 @@ void Game::initMenu()
 
 		initialises the menu
 		- sets isMenu_ flag to true
-		- creates menu text
+		- creates menu texts
 		- creates buttons
 	*/
 
 	this->isMenu_ = true;
-	this->initText();
 	this->initButtons();
+	this->initText();
 		
 }
 
@@ -221,17 +258,19 @@ void Game::initMenu()
 
 Game::Game()
 {
-	// calls all init-Functions
+	// calls all the init-Functions
 	this->initWindow();
 	this->initTextures();
 	this->initMenu();
 	this->initPlayer();
 	this->initpauseMenu();
+	this->initVariables();
 }
 
 Game::~Game()
 {
 	// deletes all objects
+
 	delete this->player_;
 
 	for (auto& el : this->textures_)
@@ -250,13 +289,156 @@ Game::~Game()
 	{
 		delete el;
 	}
+
 	delete this->pauseButton_;
+
 	delete this->window_;
 }
 
 ///
 /// FUNCTIONS
 ///
+
+// obs³uga plików
+
+int Game::findNickname()
+{
+	/*
+		@returns int
+
+		funkcja odpowiada za znalezienie w wektorze Game::fileTextLines_ szukanego nicku, a nastêpnie zwrócenie jego pozycji w wektorze
+		- je¿eli nick nie zostanie znaleziony zwracana jest wartoœæ -1
+	*/
+
+	int line_number = 0;
+
+	for (line_number; line_number < this->fileTextLines_.size(); ++line_number)
+	{
+		std::cout << "-" << fileTextLines_[line_number].substr(0, fileTextLines_[line_number].find(' ')) << "-" << playerNickname_.substr(1, playerNickname_.size()) << "\n";
+
+		if (fileTextLines_[line_number][0] == ' ')
+		{
+			if (fileTextLines_[line_number].substr(1, fileTextLines_[line_number].find(' ')) == playerNickname_.substr(1, playerNickname_.size()))
+			{
+				std::cout << line_number << std::endl;
+				return line_number;
+			}
+		}
+		else
+		{
+			if (fileTextLines_[line_number].substr(0, fileTextLines_[line_number].find(' ')) == playerNickname_.substr(1, playerNickname_.size()))
+			{
+				std::cout << line_number << std::endl;
+				return line_number;
+			}
+		}
+	}
+
+	return -1;
+}
+
+void Game::inputFromFile(const std::string& filename)
+{
+	/*
+		@returns void
+
+		funkcja odpowiada za wczytanie z pliku poziomu gracza, o podanym nicku, aby móg³ kontynuowaæ rozgrywkê ze swoj¹ postaci¹
+		- otwrcie pliku i zapisanie wszystkich jego linii w wektorze
+		- znaleienie linii, w której znajduje siê szukany nick i zapisanie jej numeru w zmiennej line_number
+		- je¿eli nick zosta³ znaleziony, ze stringa fileTextLines_[line_number] odczytywane i zapisywane sa wartoœci levelFromFile_ oraz expFromFile_
+		- w przeciwnym wypadku przypisywane im s¹ kolejno wartoœci 1 oraz 0
+		- plik jest zamykany
+	*/
+
+	std::ifstream file(filename);
+	std::string line;
+
+	if (file.is_open())
+	{
+		while (std::getline(file, line))
+		{
+			this->fileTextLines_.push_back(line);
+		}
+	}
+
+	int line_number = findNickname();
+
+	std::cout << "input frrom file line " << line_number << std::endl;
+
+	if (line_number != -1)
+	{
+		size_t spacePos = fileTextLines_[line_number].find(' ');
+		size_t nextSpacePos = fileTextLines_[line_number].find(' ', spacePos + 1);
+
+		this->levelFromFile_ = std::stoi(fileTextLines_[line_number].substr(spacePos + 1, nextSpacePos - spacePos - 1));
+
+		spacePos = nextSpacePos;
+		nextSpacePos = fileTextLines_[line_number].find(' ', spacePos + 1);
+
+		this->expFromFile_ = std::stoi(fileTextLines_[line_number].substr(spacePos + 1, nextSpacePos - spacePos - 1));
+
+		std::cout << "level from file " << levelFromFile_ << " exp from file " << expFromFile_ << "\n";
+	}
+	else
+	{
+		this->levelFromFile_ = 1;
+		this->expFromFile_ = 0;
+
+		std::cout << "level " << levelFromFile_ << " exp " << expFromFile_ << "\n";
+	}
+
+	file.close();
+}
+
+void Game::saveNickname(const std::string& filename) 
+{
+	/*
+		@returns void
+
+		funckja odpowiedzialna za zapisanie do pliku nicku gracza, wraz z poziomem i doœwiadczeniem
+		- otwarcie pliku
+		- u¿ycie funkcji findNickname() do znalezienia linii, w której znajduj¹ siê ju¿ informacje o graczu
+		- je¿eli tak¹ linie znaleziono nale¿y je usun¹æ z wektora fileTextLines_
+		- w obu przypadkach nastepnie na koniec wektora dodaje siê informacje o graczu
+		- plik jest zamykany
+	*/
+
+	std::ofstream file;
+	file.open(filename, std::ios::out | std::ios::trunc);
+
+	if (file.is_open())
+	{
+		int line_number = findNickname();
+		std::cout << line_number << std::endl;
+
+		if (line_number != -1)
+		{
+			std::cout << line_number << " line_number != -1, erase\n";
+			this->fileTextLines_.erase(this->fileTextLines_.begin() + line_number);
+		}
+
+		this->fileTextLines_.push_back(this->playerNickname_ + " " + std::to_string(this->player_->getLevel()) + " " + std::to_string(this->player_->getCurrentExp()));
+
+		for (auto line : fileTextLines_)
+		{
+			if (line[0] == ' ')
+			{
+				file << line.substr(1, line.size() - 1) << std::endl;
+			}
+			else
+			{
+				file << line << std::endl;
+			}
+			std::cout << " ping in saving: " << line << std::endl;
+		}
+
+		file.close();
+		this->fileTextLines_.clear();
+	}
+	else {
+		std::cerr << "Nie mo¿na otworzyæ pliku: " << filename << "\n";
+	}
+}
 
 // Main loop
 void Game::run()
@@ -266,31 +448,30 @@ void Game::run()
 
 		Runs the main game loop while the window is open.
 		- main loop
-		- updating
-		- rendering
+			> event polling
+			> updating the program's state
+			> rendering to the window
 	*/
 
 	while (window_->isOpen())
 	{
 		this->updatePollEvents();
-
-		if (!pause_.isPaused()) {
-			this->update();
-		}
-
+		this->update();
 		this->render();
-		//this->enterNickname();
 	}
 }
-
 
 void Game::updatePollEvents()
 {
 	/*
 		@returns void
 
-		Checks all events in the poll
-		- closing via escape key
+		window event polling
+		- updating mouse position
+		- pausing and unpausing
+		- exiting the level
+		- entering player nickname
+		- backspace
 	*/
 
 	this->mousePos_ = sf::Mouse::getPosition(*this->window_);
@@ -348,104 +529,6 @@ void Game::updatePollEvents()
 	}
 }
 
-// obs³uga plików
-
-int Game::findNickname(const std::string& filename)
-{
-
-	std::ifstream file(filename);
-	std::string line;
-	int line_number = 0;
-
-	if (file.is_open())
-	{
-		while (std::getline(file, line))
-		{
-			std::string currentNickname = line.substr(0, line.find(' '));
-
-			if (currentNickname == this->playerNickname_)
-				return line_number;
-
-			++line_number;
-		}
-	}
-
-	return -1;
-}
-
-void Game::inputFromFile(const std::string& filename)
-{
-
-	std::ifstream file(filename);
-	std::string line;
-
-	if (file.is_open())
-	{
-		while (std::getline(file, line))
-		{
-			this->fileTextLines_.push_back(line);
-		}
-	}
-
-	int line_number = findNickname(filename);
-
-	if (line_number != -1)
-	{
-		size_t spacePos = fileTextLines_[line_number].find(' ');
-		size_t nextSpacePos = fileTextLines_[line_number].find(' ', spacePos + 1);
-
-		this->levelFromFile_ = std::stoi(fileTextLines_[line_number].substr(spacePos + 1, nextSpacePos - spacePos - 1));
-
-		spacePos = nextSpacePos;
-		nextSpacePos = fileTextLines_[line_number].find(' ', spacePos + 1);
-
-		this->expFromFile_ = std::stoi(fileTextLines_[line_number].substr(spacePos + 1, nextSpacePos - spacePos - 1));
-
-		std::cout << "level from file " << levelFromFile_ << " exp from file " << expFromFile_ << "\n";
-	}
-	else
-	{
-		this->levelFromFile_ = 1;
-		this->expFromFile_ = 0;
-
-		std::cout << "level " << levelFromFile_ << " exp " << expFromFile_ << "\n";
-	}
-
-	file.close();
-}
-
-void Game::saveNickname(const std::string& filename) {
-
-	std::ofstream file(filename);
-	//file.open(filename, std::ios::out | std::ios::trunc);
-	file.open(filename);
-
-	if (file.is_open())
-	{
-		int line_number = findNickname(filename);
-
-		if (line_number != -1)
-		{
-			this->fileTextLines_[line_number] = this->playerNickname_ + " " + std::to_string(this->player_->getLevel()) + " " + std::to_string(this->player_->getCurrentExp());
-		}
-		else
-		{
-			this->fileTextLines_.push_back(this->playerNickname_ + " " + std::to_string(this->player_->getLevel()) + " " + std::to_string(this->player_->getCurrentExp()));
-		}
-
-		for (int i = 0; i < 5; i++) {
-			file << "dupa\n";
-
-			std::cout << " ping in saving: " << i << std::endl;
-		}
-
-		file.close();
-	}
-	else {
-		std::cerr << "Nie mo¿na otworzyæ pliku: " << filename << "\n";
-	}
-}
-
 // UPDATES
 
 void Game::updateMenu()
@@ -453,11 +536,16 @@ void Game::updateMenu()
 	/*
 		@returns void
 
-		funkcja odpowiadaj¹ca za wybór poziomu
-		- sprawdza czy wciœniêto lewy przycisk myszy
-		- sprawdza czy klikniêto na przycisk 
-		- wy³¹cza menu ustawiaj¹c isMenu_ na false
-		- wywo³uje odpowiedni poziom
+		funkcja odpowiadaj¹ca za obs³ugê wciœniêtych przycisków
+		- wybór poziomów 1, 2, 3
+			> prze³¹cza isMenu = false
+			> tworzy poziom przy u¿yciu danych z pliku tekstowego
+		- wyjœcie
+		- rozpoczêcia wpisywania nicku
+		- wciœniêcie entera w trakcie pisania
+			> sprawdzenie czy w pliku istnieje ju¿ taki gracz
+			> stworzenia gracza o poziomie i doœwiadczeniu z pliku
+		- backspace
 	*/
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -534,14 +622,15 @@ void Game::updateLevel()
 		funkcja odpowiedzialna za aktualizowanie rozgrywki oraz jej zakoñczenie
 		- wywo³anie Level::update() - aktualizacja rozgrywki
 		- zakoñczenie rozgrywki - wygrana
-			> dzieje siê po zabiciu wszystkich przeciwników
+			> sprawdzenie czy pokonano bossa
 			> reset poziomu
-			> prze³¹czenie Game::update() i Game::render() na menu
+			> powrót do menu
+			> zapisanie postêpu
 		- zakoñczenie rozgrywki - przegrana
-			> dzieje siê gdy zdrowie gracza spadnie do 0
+			> sprawdzenie czy zdrowie gracza nie spad³o do 0
 			> reset poziomu
-			> reset gracza
-			> prze³¹czenie Game::update() i Game::render() na menu
+			> powrót do menu
+			> zapisanie postêpu
 	*/
 
 	// updating
@@ -582,15 +671,13 @@ void Game::update()
 		@returns void
 
 		funkcja odpowiedzialna za aktualizacje stanu programu w pêtli g³ównej Game::run()
-		- zapisuje bie¿¹c¹ pozycjê myszy
-		- na podstawie flagi Game::isMenu_ wywo³uje
-			> true   ->  updateMenu() 
-			> false  ->  updateLevel()
+		- je¿eli isMenu_==true aktualizuje menu
+		- je¿eli isMenu_==false i rozgrywka nie jest zapauzowana aktualizuje stan poziomu
 	*/
 
 	if (this->isMenu_)
 		this->updateMenu();
-	else
+	else if (!this->pause_.isPaused())
 		this->updateLevel();
 }
 
@@ -598,6 +685,8 @@ void Game::update()
 
 void Game::renderMenu()
 {
+	// renders all menu texts and buttons
+
 	for (auto& btn : buttons_)
 	{
 		this->window_->draw(*btn);
@@ -615,9 +704,10 @@ void Game::render()
 	
 		funkcja odpowiedzialna za wyrysowywanie aktualnego stanu programu na ekranie
 		- czyœci okno programu
-		- na podstawie flagi Game::isMenu_ wyrysowuje klatkê na oknie Game::window_, wywo³uj¹c
-			> true   ->  renderMenu() 
-			> false  ->  renderLevel()
+		- wyrysowanie stanu programu w oknie
+			> je¿eli isMenu_==true renderuje menu
+			> je¿eli isMenu_==false renderuje poziom
+			> je¿eli rozgrywka jest zapauzowana renderuje menu pauzy
 		- wyœwietla wyrenderowan¹ klatkê na ekranie
 	*/
 

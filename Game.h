@@ -58,9 +58,7 @@ private:
 	void initText();
 	void initMenu();
 
-	//void saveNickname(const std::string& filename, const std::string& nick,unsigned poziom, unsigned xp);
-	//int findNickname(const std::string& filename);
-	int findNickname(const std::string& filename);
+	int findNickname();
 	void inputFromFile(const std::string& filename);
 	void saveNickname(const std::string& filename);
 
