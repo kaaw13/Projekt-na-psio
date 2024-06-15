@@ -50,7 +50,8 @@ private:
 
 	// enemies
 	std::vector<Enemy*> enemies_;
-	Boss* boss_;
+	Entity* boss;
+	Boss* boss_ = dynamic_cast<Boss*>(this->boss);
 
 	sf::Clock* spawnClock_;
 	sf::Time spawnCooldown_;
